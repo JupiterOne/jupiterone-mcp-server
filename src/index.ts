@@ -1,19 +1,27 @@
 #!/usr/bin/env node
 
 import { JupiterOneMcpServer } from './server/mcp-server.js';
-import { JupiterOneConfigSchema } from './types/jupiterone.js';
 import dotenv from 'dotenv';
+import { JupiterOneConfig } from './types/jupiterone.js';
 
 dotenv.config();
 
 async function main() {
   try {
     // Get configuration from environment variables
-    const config = JupiterOneConfigSchema.parse({
-      apiKey: process.env.JUPITERONE_API_KEY,
-      accountId: process.env.JUPITERONE_ACCOUNT_ID,
+    const config: JupiterOneConfig = {
+      apiKey: process.env.JUPITERONE_API_KEY || '',
+      accountId: process.env.JUPITERONE_ACCOUNT_ID || '',
       baseUrl: process.env.JUPITERONE_BASE_URL || 'https://graphql.us.jupiterone.io'
-    });
+    };
+
+    // Validate required fields
+    if (!config.apiKey) {
+      throw new Error('JUPITERONE_API_KEY environment variable is required');
+    }
+    if (!config.accountId) {
+      throw new Error('JUPITERONE_ACCOUNT_ID environment variable is required');
+    }
 
     // Create and start the MCP server
     const server = new JupiterOneMcpServer(config);

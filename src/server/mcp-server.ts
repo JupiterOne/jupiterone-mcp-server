@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { JupiterOneClient } from '../client/jupiterone-client.js';
-import { JupiterOneConfig, AlertStatusSchema } from '../types/jupiterone.js';
+import { JupiterOneConfig } from '../types/jupiterone.js';
 
 export class JupiterOneMcpServer {
   private server: McpServer;
@@ -20,16 +20,15 @@ export class JupiterOneMcpServer {
   }
 
   private setupTools(): void {
-    // Tool: List all alert rules
+    // Tool: List all rules
     this.server.tool(
-      'list-alert-rules',
+      'list-rules',
       {
-        status: AlertStatusSchema.optional(),
         limit: z.number().min(1).max(1000).optional(),
       },
-      async ({ status, limit }) => {
+      async ({ limit }) => {
         try {
-          const instances = await this.client.getAllAlertInstances(status);
+          const instances = await this.client.getAllRuleInstances();
           const limitedInstances = limit ? instances.slice(0, limit) : instances;
 
           return {
@@ -42,12 +41,17 @@ export class JupiterOneMcpServer {
                     returned: limitedInstances.length,
                     rules: limitedInstances.map((instance) => ({
                       id: instance.id,
-                      name: instance.questionRuleInstance?.name || 'Unknown',
-                      description: instance.questionRuleInstance?.description || '',
-                      status: instance.status,
-                      level: instance.level,
-                      lastUpdated: instance.lastUpdatedOn,
-                      created: instance.createdOn,
+                      name: instance.name,
+                      description: instance.description,
+                      version: instance.version,
+                      pollingInterval: instance.pollingInterval,
+                      lastEvaluationStartOn: instance.lastEvaluationStartOn,
+                      lastEvaluationEndOn: instance.lastEvaluationEndOn,
+                      latestAlertId: instance.latestAlertId,
+                      latestAlertIsActive: instance.latestAlertIsActive,
+                      type: instance.type,
+                      tags: instance.tags,
+                      outputs: instance.outputs,
                     })),
                   },
                   null,
@@ -61,7 +65,7 @@ export class JupiterOneMcpServer {
             content: [
               {
                 type: 'text',
-                text: `Error listing alert rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                text: `Error listing rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,
@@ -78,13 +82,8 @@ export class JupiterOneMcpServer {
       },
       async ({ ruleId }) => {
         try {
-          const instances = await this.client.getAllAlertInstances();
-          const rule = instances.find(
-            (instance) =>
-              instance.id === ruleId ||
-              instance.ruleId === ruleId ||
-              instance.questionRuleInstance?.id === ruleId
-          );
+          const instances = await this.client.getAllRuleInstances();
+          const rule = instances.find((instance) => instance.id === ruleId);
 
           if (!rule) {
             return {
@@ -105,19 +104,31 @@ export class JupiterOneMcpServer {
                 text: JSON.stringify(
                   {
                     id: rule.id,
-                    ruleId: rule.ruleId,
                     accountId: rule.accountId,
-                    name: rule.questionRuleInstance?.name || 'Unknown',
-                    description: rule.questionRuleInstance?.description || '',
-                    status: rule.status,
-                    level: rule.level,
-                    lastUpdated: rule.lastUpdatedOn,
-                    lastEvaluationBegin: rule.lastEvaluationBeginOn,
-                    lastEvaluationEnd: rule.lastEvaluationEndOn,
-                    created: rule.createdOn,
-                    dismissed: rule.dismissedOn,
-                    queries: rule.questionRuleInstance?.question?.queries || [],
-                    evaluationResult: rule.lastEvaluationResult,
+                    name: rule.name,
+                    description: rule.description,
+                    version: rule.version,
+                    pollingInterval: rule.pollingInterval,
+                    lastEvaluationStartOn: rule.lastEvaluationStartOn,
+                    lastEvaluationEndOn: rule.lastEvaluationEndOn,
+                    evaluationStep: rule.evaluationStep,
+                    specVersion: rule.specVersion,
+                    notifyOnFailure: rule.notifyOnFailure,
+                    triggerActionsOnNewEntitiesOnly: rule.triggerActionsOnNewEntitiesOnly,
+                    ignorePreviousResults: rule.ignorePreviousResults,
+                    outputs: rule.outputs,
+                    labels: rule.labels,
+                    questionId: rule.questionId,
+                    latest: rule.latest,
+                    deleted: rule.deleted,
+                    type: rule.type,
+                    operations: rule.operations,
+                    latestAlertId: rule.latestAlertId,
+                    latestAlertIsActive: rule.latestAlertIsActive,
+                    state: rule.state,
+                    tags: rule.tags,
+                    remediationSteps: rule.remediationSteps,
+                    queries: rule.question?.queries || [],
                   },
                   null,
                   2
@@ -266,26 +277,24 @@ export class JupiterOneMcpServer {
     this.server.resource('account-summary', 'jupiterone://account/summary', async () => {
       try {
         const accountInfo = await this.client.getAccountInfo();
-        const allRules = await this.client.getAllAlertInstances();
-        const activeAlerts = allRules.filter((rule) => rule.status === 'ACTIVE');
-        const inactiveAlerts = allRules.filter((rule) => rule.status === 'INACTIVE');
-        const dismissedAlerts = allRules.filter((rule) => rule.status === 'DISMISSED');
+        const allRules = await this.client.getAllRuleInstances();
+        const activeRules = allRules.filter((rule) => rule.latestAlertIsActive);
+        const inactiveRules = allRules.filter((rule) => !rule.latestAlertIsActive);
+        const deletedRules = allRules.filter((rule) => rule.deleted);
 
         const summary = {
           account: accountInfo,
           statistics: {
             totalRules: allRules.length,
-            activeAlerts: activeAlerts.length,
-            inactiveAlerts: inactiveAlerts.length,
-            dismissedAlerts: dismissedAlerts.length,
+            activeRules: activeRules.length,
+            inactiveRules: inactiveRules.length,
+            deletedRules: deletedRules.length,
           },
-          alertsByLevel: {
-            critical: allRules.filter((rule) => rule.level === 'CRITICAL').length,
-            high: allRules.filter((rule) => rule.level === 'HIGH').length,
-            medium: allRules.filter((rule) => rule.level === 'MEDIUM').length,
-            low: allRules.filter((rule) => rule.level === 'LOW').length,
-            info: allRules.filter((rule) => rule.level === 'INFO').length,
-          },
+          rulesByType: allRules.reduce((acc: Record<string, number>, rule) => {
+            const type = rule.type || 'unknown';
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+          }, {}),
         };
 
         return {
@@ -313,7 +322,7 @@ export class JupiterOneMcpServer {
     // Resource: All rules list
     this.server.resource('all-rules', 'jupiterone://rules/all', async () => {
       try {
-        const instances = await this.client.getAllAlertInstances();
+        const instances = await this.client.getAllRuleInstances();
 
         return {
           contents: [

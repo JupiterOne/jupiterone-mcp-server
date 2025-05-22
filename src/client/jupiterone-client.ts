@@ -9,14 +9,14 @@ import {
   UpdateInlineQuestionRuleInstanceInput,
   CreateReferencedQuestionRuleInstanceInput,
   UpdateReferencedQuestionRuleInstanceInput,
-  ListAlertInstancesResponseSchema,
-  InlineQuestionRuleInstanceSchema,
-  ReferencedQuestionRuleInstanceSchema,
   ListRuleInstancesResponse,
-  ListRuleInstancesResponseSchema,
   ListRuleInstancesFilters,
   QuestionRuleInstance,
 } from '../types/jupiterone.js';
+
+interface GraphQLResponse<T> {
+  [key: string]: T;
+}
 
 export class JupiterOneClient {
   private client: GraphQLClient;
@@ -24,7 +24,7 @@ export class JupiterOneClient {
 
   constructor(config: JupiterOneConfig) {
     this.config = config;
-    this.client = new GraphQLClient(config.baseUrl, {
+    this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json',
@@ -94,8 +94,8 @@ export class JupiterOneClient {
     if (limit) variables.limit = limit;
     if (cursor) variables.cursor = cursor;
 
-    const response = await this.client.request(query, variables);
-    return ListAlertInstancesResponseSchema.parse(response);
+    const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(query, variables);
+    return response.listAlertInstances;
   }
 
   /**
@@ -201,22 +201,24 @@ export class JupiterOneClient {
     if (cursor) variables.cursor = cursor;
     if (filters) variables.filters = filters;
 
-    const response = await this.client.request(query, variables);
-    return ListRuleInstancesResponseSchema.parse(response);
+    const response = await this.client.request<{ listRuleInstances: ListRuleInstancesResponse['listRuleInstances'] }>(query, variables);
+    return { listRuleInstances: response.listRuleInstances };
   }
 
   /**
    * Get all rule instances by paginating through all pages
    */
-  async getAllRuleInstances(
-    filters?: ListRuleInstancesFilters
-  ): Promise<QuestionRuleInstance[]> {
+  async getAllRuleInstances(filters?: ListRuleInstancesFilters): Promise<QuestionRuleInstance[]> {
     const allInstances: QuestionRuleInstance[] = [];
     let cursor: string | null = null;
     let hasNextPage = true;
 
     while (hasNextPage) {
       const response = await this.listRuleInstances(100, cursor || undefined, filters);
+      if (!response?.listRuleInstances?.questionInstances) {
+        console.error('Unexpected response structure:', response);
+        break;
+      }
       allInstances.push(...response.listRuleInstances.questionInstances);
 
       cursor = response.listRuleInstances.pageInfo.endCursor;
@@ -268,8 +270,8 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { instance })) as any;
-    return InlineQuestionRuleInstanceSchema.parse(response.createInlineQuestionRuleInstance);
+    const response = await this.client.request<{ createInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
+    return response.createInlineQuestionRuleInstance;
   }
 
   /**
@@ -314,8 +316,8 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { instance })) as any;
-    return InlineQuestionRuleInstanceSchema.parse(response.updateInlineQuestionRuleInstance);
+    const response = await this.client.request<{ updateInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
+    return response.updateInlineQuestionRuleInstance;
   }
 
   /**
@@ -355,10 +357,8 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { instance })) as any;
-    return ReferencedQuestionRuleInstanceSchema.parse(
-      response.createReferencedQuestionRuleInstance
-    );
+    const response = await this.client.request<{ createReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
+    return response.createReferencedQuestionRuleInstance;
   }
 
   /**
@@ -398,10 +398,8 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { instance })) as any;
-    return ReferencedQuestionRuleInstanceSchema.parse(
-      response.updateReferencedQuestionRuleInstance
-    );
+    const response = await this.client.request<{ updateReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
+    return response.updateReferencedQuestionRuleInstance;
   }
 
   /**
@@ -416,7 +414,7 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { id })) as any;
+    const response = await this.client.request<{ deleteRuleInstance: { id: string } }>(mutation, { id });
     return response.deleteRuleInstance;
   }
 
@@ -437,7 +435,7 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = (await this.client.request(mutation, { id })) as any;
+    const response = await this.client.request<{ evaluateRuleInstance: { outputs: Array<{ name: string; value: any }> } }>(mutation, { id });
     return response.evaluateRuleInstance;
   }
 
@@ -461,7 +459,7 @@ export class JupiterOneClient {
     `;
 
     try {
-      const response = (await this.client.request(query)) as any;
+      const response = await this.client.request<{ iamGetAccount: { accountId: string; accountName?: string } }>(query);
       return {
         accountId: response.iamGetAccount.accountId,
         name: response.iamGetAccount.accountName,

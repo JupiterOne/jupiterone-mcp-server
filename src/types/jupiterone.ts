@@ -1,261 +1,209 @@
-import { z } from 'zod';
-
 // Base JupiterOne types
-export const AlertStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'DISMISSED']);
-export type AlertStatus = z.infer<typeof AlertStatusSchema>;
+export type AlertStatus = 'ACTIVE' | 'INACTIVE' | 'DISMISSED';
+export type AlertLevel = 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type PollingInterval =
+  | 'DISABLED'
+  | 'THIRTY_MINUTES'
+  | 'ONE_HOUR'
+  | 'FOUR_HOURS'
+  | 'EIGHT_HOURS'
+  | 'TWELVE_HOURS'
+  | 'ONE_DAY'
+  | 'ONE_WEEK';
 
-export const AlertLevelSchema = z.enum(['INFO', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
-export type AlertLevel = z.infer<typeof AlertLevelSchema>;
+// Query types
+export interface Query {
+  query: string;
+  name: string;
+  version?: string;
+}
 
-export const PollingIntervalSchema = z.enum([
-  'DISABLED',
-  'THIRTY_MINUTES',
-  'ONE_HOUR',
-  'FOUR_HOURS',
-  'EIGHT_HOURS',
-  'TWELVE_HOURS',
-  'ONE_DAY',
-  'ONE_WEEK',
-]);
-export type PollingInterval = z.infer<typeof PollingIntervalSchema>;
+export interface Question {
+  queries: Query[];
+}
 
-// Query schema
-export const QuerySchema = z.object({
-  query: z.string(),
-  name: z.string(),
-  version: z.string().optional(),
-});
-export type Query = z.infer<typeof QuerySchema>;
+// Operation types
+export interface FilterCondition {
+  type: 'FILTER';
+  version: number;
+  condition: any[];
+}
 
-// Question schema
-export const QuestionSchema = z.object({
-  queries: z.array(QuerySchema),
-});
-export type Question = z.infer<typeof QuestionSchema>;
+export type Action =
+  | {
+      type: 'SET_PROPERTY';
+      targetProperty: string;
+      targetValue: any;
+    }
+  | {
+      type: 'CREATE_ALERT';
+    };
 
-// Operation schemas
-export const FilterConditionSchema = z.object({
-  type: z.literal('FILTER'),
-  version: z.number(),
-  condition: z.array(z.any()),
-});
+export interface Operation {
+  when: FilterCondition;
+  actions: Action[];
+}
 
-export const ActionSchema = z.union([
-  z.object({
-    type: z.literal('SET_PROPERTY'),
-    targetProperty: z.string(),
-    targetValue: z.any(),
-  }),
-  z.object({
-    type: z.literal('CREATE_ALERT'),
-  }),
-]);
+// Alert rule instance types
+export interface AlertRuleInstance {
+  id: string;
+  accountId: string;
+  ruleId: string;
+  level: AlertLevel;
+  status: AlertStatus;
+  lastUpdatedOn: string;
+  lastEvaluationBeginOn?: string;
+  lastEvaluationEndOn?: string;
+  createdOn: string;
+  dismissedOn?: string;
+  lastEvaluationResult?: {
+    rawDataDescriptors: {
+      recordCount: number;
+    }[];
+  };
+  questionRuleInstance?: {
+    id: string;
+    name: string;
+    description: string;
+    question: Question;
+  };
+}
 
-export const OperationSchema = z.object({
-  when: FilterConditionSchema,
-  actions: z.array(ActionSchema),
-});
-export type Operation = z.infer<typeof OperationSchema>;
+// Rule instance types
+export interface InlineQuestionRuleInstance {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  pollingInterval: PollingInterval;
+  question: Question;
+  operations: Operation[];
+  outputs: string[];
+}
 
-// Alert rule instance schemas
-export const AlertRuleInstanceSchema = z.object({
-  id: z.string(),
-  accountId: z.string(),
-  ruleId: z.string(),
-  level: AlertLevelSchema,
-  status: AlertStatusSchema,
-  lastUpdatedOn: z.string(),
-  lastEvaluationBeginOn: z.string().optional(),
-  lastEvaluationEndOn: z.string().optional(),
-  createdOn: z.string(),
-  dismissedOn: z.string().optional(),
-  lastEvaluationResult: z
-    .object({
-      rawDataDescriptors: z.array(
-        z.object({
-          recordCount: z.number(),
-        })
-      ),
-    })
-    .optional(),
-  questionRuleInstance: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      description: z.string(),
-      question: QuestionSchema,
-    })
-    .optional(),
-});
-export type AlertRuleInstance = z.infer<typeof AlertRuleInstanceSchema>;
+export interface ReferencedQuestionRuleInstance {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  pollingInterval: PollingInterval;
+  questionId?: string;
+  questionName?: string;
+  operations: Operation[];
+  outputs: string[];
+}
 
-// Rule instance schemas
-export const InlineQuestionRuleInstanceSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  version: z.string(),
-  pollingInterval: PollingIntervalSchema,
-  question: QuestionSchema,
-  operations: z.array(OperationSchema),
-  outputs: z.array(z.string()),
-});
-export type InlineQuestionRuleInstance = z.infer<typeof InlineQuestionRuleInstanceSchema>;
+// API response types
+export interface PageInfo {
+  endCursor: string | null;
+  hasNextPage: boolean;
+}
 
-export const ReferencedQuestionRuleInstanceSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  version: z.string(),
-  pollingInterval: PollingIntervalSchema,
-  questionId: z.string().optional(),
-  questionName: z.string().optional(),
-  operations: z.array(OperationSchema),
-  outputs: z.array(z.string()),
-});
-export type ReferencedQuestionRuleInstance = z.infer<typeof ReferencedQuestionRuleInstanceSchema>;
+export interface ListAlertInstancesResponse {
+  listAlertInstances: {
+    instances: AlertRuleInstance[];
+    pageInfo: PageInfo;
+  };
+}
 
-// API response schemas
-export const PageInfoSchema = z.object({
-  endCursor: z.string().nullable(),
-  hasNextPage: z.boolean(),
-});
+// Input types for mutations
+export interface CreateInlineQuestionRuleInstanceInput {
+  name: string;
+  description: string;
+  version: string;
+  pollingInterval: PollingInterval;
+  outputs: string[];
+  operations: Operation[];
+  question: Question;
+}
 
-export const ListAlertInstancesResponseSchema = z.object({
-  listAlertInstances: z.object({
-    instances: z.array(AlertRuleInstanceSchema),
-    pageInfo: PageInfoSchema,
-  }),
-});
-export type ListAlertInstancesResponse = z.infer<typeof ListAlertInstancesResponseSchema>;
+export interface UpdateInlineQuestionRuleInstanceInput extends CreateInlineQuestionRuleInstanceInput {
+  id: string;
+}
 
-// Input schemas for mutations
-export const CreateInlineQuestionRuleInstanceInputSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  version: z.string(),
-  pollingInterval: PollingIntervalSchema,
-  outputs: z.array(z.string()),
-  operations: z.array(OperationSchema),
-  question: QuestionSchema,
-});
-export type CreateInlineQuestionRuleInstanceInput = z.infer<
-  typeof CreateInlineQuestionRuleInstanceInputSchema
->;
+export interface CreateReferencedQuestionRuleInstanceInput {
+  name: string;
+  description: string;
+  version: string;
+  pollingInterval: PollingInterval;
+  outputs: string[];
+  operations: Operation[];
+  questionId?: string;
+  questionName?: string;
+}
 
-export const UpdateInlineQuestionRuleInstanceInputSchema =
-  CreateInlineQuestionRuleInstanceInputSchema.extend({
-    id: z.string(),
-  });
-export type UpdateInlineQuestionRuleInstanceInput = z.infer<
-  typeof UpdateInlineQuestionRuleInstanceInputSchema
->;
+export interface UpdateReferencedQuestionRuleInstanceInput extends CreateReferencedQuestionRuleInstanceInput {
+  id: string;
+}
 
-export const CreateReferencedQuestionRuleInstanceInputSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  version: z.string(),
-  pollingInterval: PollingIntervalSchema,
-  outputs: z.array(z.string()),
-  operations: z.array(OperationSchema),
-  questionId: z.string().optional(),
-  questionName: z.string().optional(),
-});
-export type CreateReferencedQuestionRuleInstanceInput = z.infer<
-  typeof CreateReferencedQuestionRuleInstanceInputSchema
->;
+// Configuration type
+export interface JupiterOneConfig {
+  apiKey: string;
+  accountId: string;
+  baseUrl?: string;
+}
 
-export const UpdateReferencedQuestionRuleInstanceInputSchema =
-  CreateReferencedQuestionRuleInstanceInputSchema.extend({
-    id: z.string(),
-  });
-export type UpdateReferencedQuestionRuleInstanceInput = z.infer<
-  typeof UpdateReferencedQuestionRuleInstanceInputSchema
->;
+// Rule instance types for the new query
+export interface RuleInstanceLabel {
+  labelName: string;
+  labelValue: string;
+}
 
-// Configuration schema
-export const JupiterOneConfigSchema = z.object({
-  apiKey: z.string(),
-  accountId: z.string(),
-  baseUrl: z.string().default('https://graphql.us.jupiterone.io'),
-});
-export type JupiterOneConfig = z.infer<typeof JupiterOneConfigSchema>;
+export interface RuleInstanceOperation {
+  when: FilterCondition;
+  actions: Action[];
+}
 
-// Rule instance label schema
-export const RuleInstanceLabelSchema = z.object({
-  labelName: z.string(),
-  labelValue: z.string(),
-});
-export type RuleInstanceLabel = z.infer<typeof RuleInstanceLabelSchema>;
+export interface RuleInstanceState {
+  actions: Action[];
+}
 
-// Rule instance operation schema for the new query
-export const RuleInstanceOperationSchema = z.object({
-  when: z.any(),
-  actions: z.any(),
-});
+export interface EnhancedQuery extends Query {
+  includeDeleted?: boolean;
+}
 
-// Rule instance state schema
-export const RuleInstanceStateSchema = z.object({
-  actions: z.any(),
-});
+export interface EnhancedQuestion {
+  queries: EnhancedQuery[];
+}
 
-// Enhanced Query schema with includeDeleted
-export const EnhancedQuerySchema = z.object({
-  query: z.string(),
-  name: z.string(),
-  version: z.string(),
-  includeDeleted: z.boolean().optional(),
-});
+export interface QuestionRuleInstance {
+  id: string;
+  resourceGroupId: string | null;
+  accountId: string;
+  name: string;
+  description: string;
+  version: string;
+  lastEvaluationStartOn: string | null;
+  lastEvaluationEndOn: string | null;
+  evaluationStep: string | null;
+  specVersion: string | null;
+  notifyOnFailure: boolean | null;
+  triggerActionsOnNewEntitiesOnly: boolean | null;
+  ignorePreviousResults: boolean | null;
+  pollingInterval: PollingInterval | null;
+  templates: any[] | null;
+  outputs: string[];
+  labels: RuleInstanceLabel[] | null;
+  question: EnhancedQuestion;
+  questionId: string | null;
+  latest: boolean | null;
+  deleted: boolean | null;
+  type: string | null;
+  operations: RuleInstanceOperation[] | null;
+  latestAlertId: string | null;
+  latestAlertIsActive: boolean | null;
+  state: RuleInstanceState | null;
+  tags: string[] | null;
+  remediationSteps: string | null;
+}
 
-// Enhanced Question schema
-export const EnhancedQuestionSchema = z.object({
-  queries: z.array(EnhancedQuerySchema),
-});
+export interface ListRuleInstancesResponse {
+  listRuleInstances: {
+    questionInstances: QuestionRuleInstance[];
+    pageInfo: PageInfo;
+  };
+}
 
-// Full rule instance schema based on the RuleInstanceFields fragment
-export const QuestionRuleInstanceSchema = z.object({
-  id: z.string(),
-  resourceGroupId: z.string().optional(),
-  accountId: z.string(),
-  name: z.string(),
-  description: z.string(),
-  version: z.string(),
-  lastEvaluationStartOn: z.string().nullable(),
-  lastEvaluationEndOn: z.string().nullable(),
-  evaluationStep: z.string().nullable(),
-  specVersion: z.string().optional(),
-  notifyOnFailure: z.boolean().optional(),
-  triggerActionsOnNewEntitiesOnly: z.boolean().optional(),
-  ignorePreviousResults: z.boolean().optional(),
-  pollingInterval: PollingIntervalSchema,
-  templates: z.array(z.any()).optional(),
-  outputs: z.array(z.string()),
-  labels: z.array(RuleInstanceLabelSchema).optional(),
-  question: EnhancedQuestionSchema,
-  questionId: z.string().optional(),
-  latest: z.boolean().optional(),
-  deleted: z.boolean().optional(),
-  type: z.string().optional(),
-  operations: z.array(RuleInstanceOperationSchema).optional(),
-  latestAlertId: z.string().nullable(),
-  latestAlertIsActive: z.boolean().optional(),
-  state: RuleInstanceStateSchema.optional(),
-  tags: z.array(z.string()).optional(),
-  remediationSteps: z.string().optional(),
-});
-export type QuestionRuleInstance = z.infer<typeof QuestionRuleInstanceSchema>;
-
-// List rule instances response schema
-export const ListRuleInstancesResponseSchema = z.object({
-  listRuleInstances: z.object({
-    questionInstances: z.array(QuestionRuleInstanceSchema),
-    pageInfo: PageInfoSchema,
-  }),
-});
-export type ListRuleInstancesResponse = z.infer<typeof ListRuleInstancesResponseSchema>;
-
-// List rule instances filters (for future use)
-export const ListRuleInstancesFiltersSchema = z.object({
+export interface ListRuleInstancesFilters {
   // Add filter properties as needed
-}).optional();
-export type ListRuleInstancesFilters = z.infer<typeof ListRuleInstancesFiltersSchema>;
+}
