@@ -16,7 +16,6 @@ export class JupiterOneMcpServer {
     });
 
     this.setupTools();
-    this.setupResources();
   }
 
   private setupTools(): void {
@@ -119,32 +118,39 @@ export class JupiterOneMcpServer {
                     pollingInterval: rule.pollingInterval,
                     templates: rule.templates,
                     outputs: rule.outputs,
-                    labels: rule.labels?.map(label => ({
-                      labelName: label.labelName,
-                      labelValue: label.labelValue
-                    })) || [],
-                    question: rule.question ? {
-                      queries: rule.question.queries?.map(query => ({
-                        query: query.query,
-                        name: query.name,
-                        includeDeleted: query.includeDeleted
-                      })) || []
-                    } : null,
+                    labels:
+                      rule.labels?.map((label) => ({
+                        labelName: label.labelName,
+                        labelValue: label.labelValue,
+                      })) || [],
+                    question: rule.question
+                      ? {
+                          queries:
+                            rule.question.queries?.map((query) => ({
+                              query: query.query,
+                              name: query.name,
+                              includeDeleted: query.includeDeleted,
+                            })) || [],
+                        }
+                      : null,
                     questionId: rule.questionId,
                     latest: rule.latest,
                     deleted: rule.deleted,
                     type: rule.type,
-                    operations: rule.operations?.map(op => ({
-                      when: op.when,
-                      actions: op.actions
-                    })) || [],
+                    operations:
+                      rule.operations?.map((op) => ({
+                        when: op.when,
+                        actions: op.actions,
+                      })) || [],
                     latestAlertId: rule.latestAlertId,
                     latestAlertIsActive: rule.latestAlertIsActive,
-                    state: rule.state ? {
-                      actions: rule.state.actions
-                    } : null,
+                    state: rule.state
+                      ? {
+                          actions: rule.state.actions,
+                        }
+                      : null,
                     tags: rule.tags,
-                    remediationSteps: rule.remediationSteps
+                    remediationSteps: rule.remediationSteps,
                   },
                   null,
                   2
@@ -218,7 +224,7 @@ export class JupiterOneMcpServer {
                   {
                     ruleId,
                     id: result.id,
-                    __typename: result.__typename
+                    __typename: result.__typename,
                   },
                   null,
                   2
@@ -266,15 +272,21 @@ export class JupiterOneMcpServer {
                     returned: limitedInstances.length,
                     activeAlerts: limitedInstances.map((instance) => ({
                       id: instance.id,
-                      name: instance.questionRuleInstance?.name || instance.reportRuleInstance?.name || 'Unknown',
-                      description: instance.questionRuleInstance?.description || instance.reportRuleInstance?.description,
+                      name:
+                        instance.questionRuleInstance?.name ||
+                        instance.reportRuleInstance?.name ||
+                        'Unknown',
+                      description:
+                        instance.questionRuleInstance?.description ||
+                        instance.reportRuleInstance?.description,
                       level: instance.level,
                       status: instance.status,
                       createdOn: instance.createdOn,
                       lastUpdatedOn: instance.lastUpdatedOn,
                       lastEvaluationBeginOn: instance.lastEvaluationBeginOn,
                       lastEvaluationEndOn: instance.lastEvaluationEndOn,
-                      recordCount: instance.lastEvaluationResult?.rawDataDescriptors?.[0]?.recordCount || 0,
+                      recordCount:
+                        instance.lastEvaluationResult?.rawDataDescriptors?.[0]?.recordCount || 0,
                       tags: instance.questionRuleInstance?.tags || [],
                       labels: instance.questionRuleInstance?.labels || [],
                       outputs: instance.lastEvaluationResult?.outputs || [],
@@ -282,7 +294,7 @@ export class JupiterOneMcpServer {
                       ruleId: instance.ruleId,
                       ruleVersion: instance.ruleVersion,
                       endReason: instance.endReason,
-                      dismissedOn: instance.dismissedOn
+                      dismissedOn: instance.dismissedOn,
                     })),
                   },
                   null,
@@ -305,81 +317,6 @@ export class JupiterOneMcpServer {
         }
       }
     );
-  }
-
-  private setupResources(): void {
-    // Resource: Account summary
-    this.server.resource('account-summary', 'jupiterone://account/summary', async () => {
-      try {
-        const accountInfo = await this.client.getAccountInfo();
-        const allRules = await this.client.getAllRuleInstances();
-        const activeRules = allRules.filter((rule) => rule.latestAlertIsActive);
-        const inactiveRules = allRules.filter((rule) => !rule.latestAlertIsActive);
-        const deletedRules = allRules.filter((rule) => rule.deleted);
-
-        const summary = {
-          account: accountInfo,
-          statistics: {
-            totalRules: allRules.length,
-            activeRules: activeRules.length,
-            inactiveRules: inactiveRules.length,
-            deletedRules: deletedRules.length,
-          },
-          rulesByType: allRules.reduce((acc: Record<string, number>, rule) => {
-            const type = rule.type || 'unknown';
-            acc[type] = (acc[type] || 0) + 1;
-            return acc;
-          }, {}),
-        };
-
-        return {
-          contents: [
-            {
-              uri: 'jupiterone://account/summary',
-              text: JSON.stringify(summary, null, 2),
-              mimeType: 'application/json',
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          contents: [
-            {
-              uri: 'jupiterone://account/summary',
-              text: `Error getting account summary: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              mimeType: 'text/plain',
-            },
-          ],
-        };
-      }
-    });
-
-    // Resource: All rules list
-    this.server.resource('all-rules', 'jupiterone://rules/all', async () => {
-      try {
-        const instances = await this.client.getAllRuleInstances();
-
-        return {
-          contents: [
-            {
-              uri: 'jupiterone://rules/all',
-              text: JSON.stringify(instances, null, 2),
-              mimeType: 'application/json',
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          contents: [
-            {
-              uri: 'jupiterone://rules/all',
-              text: `Error getting all rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              mimeType: 'text/plain',
-            },
-          ],
-        };
-      }
-    });
   }
 
   async start(): Promise<void> {
