@@ -46,27 +46,54 @@ export interface Operation {
 
 // Alert rule instance types
 export interface AlertRuleInstance {
-  id: string;
   accountId: string;
-  ruleId: string;
-  level: AlertLevel;
-  status: AlertStatus;
-  lastUpdatedOn: string;
-  lastEvaluationBeginOn?: string;
-  lastEvaluationEndOn?: string;
+  resourceGroupId: string | null;
   createdOn: string;
-  dismissedOn?: string;
-  lastEvaluationResult?: {
-    rawDataDescriptors: {
-      recordCount: number;
+  dismissedOn: string | null;
+  endReason: string | null;
+  id: string;
+  lastEvaluationBeginOn: string | null;
+  lastEvaluationEndOn: string | null;
+  lastEvaluationResult: {
+    answerText: string | null;
+    evaluationEndOn: string | null;
+    outputs: {
+      name: string;
+      value: any;
+      __typename: string;
     }[];
-  };
-  questionRuleInstance?: {
+    rawDataDescriptors: {
+      name: string;
+      recordCount: number;
+      __typename: string;
+    }[];
+    __typename: string;
+  } | null;
+  lastUpdatedOn: string;
+  level: AlertLevel;
+  questionRuleInstance: {
     id: string;
     name: string;
     description: string;
-    question: Question;
-  };
+    tags: string[];
+    pollingInterval: PollingInterval;
+    labels: {
+      labelName: string;
+      labelValue: string;
+      __typename: string;
+    }[];
+    __typename: string;
+  } | null;
+  reportRuleInstance: {
+    name: string;
+    description: string;
+    __typename: string;
+  } | null;
+  ruleId: string;
+  ruleVersion: string;
+  status: AlertStatus;
+  users: string[];
+  __typename: string;
 }
 
 // Rule instance types
@@ -103,6 +130,7 @@ export interface ListAlertInstancesResponse {
   listAlertInstances: {
     instances: AlertRuleInstance[];
     pageInfo: PageInfo;
+    __typename: string;
   };
 }
 

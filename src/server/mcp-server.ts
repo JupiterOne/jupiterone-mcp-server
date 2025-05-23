@@ -217,7 +217,8 @@ export class JupiterOneMcpServer {
                 text: JSON.stringify(
                   {
                     ruleId,
-                    outputs: result.outputs,
+                    id: result.id,
+                    __typename: result.__typename
                   },
                   null,
                   2
@@ -248,6 +249,11 @@ export class JupiterOneMcpServer {
       async ({ limit }) => {
         try {
           const instances = await this.client.getAllAlertInstances('ACTIVE');
+
+          if (!instances || !Array.isArray(instances)) {
+            throw new Error('Invalid response from JupiterOne API: instances is not an array');
+          }
+
           const limitedInstances = limit ? instances.slice(0, limit) : instances;
 
           return {
@@ -260,11 +266,23 @@ export class JupiterOneMcpServer {
                     returned: limitedInstances.length,
                     activeAlerts: limitedInstances.map((instance) => ({
                       id: instance.id,
-                      name: instance.questionRuleInstance?.name || 'Unknown',
+                      name: instance.questionRuleInstance?.name || instance.reportRuleInstance?.name || 'Unknown',
+                      description: instance.questionRuleInstance?.description || instance.reportRuleInstance?.description,
                       level: instance.level,
-                      lastUpdated: instance.lastUpdatedOn,
-                      recordCount:
-                        instance.lastEvaluationResult?.rawDataDescriptors?.[0]?.recordCount || 0,
+                      status: instance.status,
+                      createdOn: instance.createdOn,
+                      lastUpdatedOn: instance.lastUpdatedOn,
+                      lastEvaluationBeginOn: instance.lastEvaluationBeginOn,
+                      lastEvaluationEndOn: instance.lastEvaluationEndOn,
+                      recordCount: instance.lastEvaluationResult?.rawDataDescriptors?.[0]?.recordCount || 0,
+                      tags: instance.questionRuleInstance?.tags || [],
+                      labels: instance.questionRuleInstance?.labels || [],
+                      outputs: instance.lastEvaluationResult?.outputs || [],
+                      users: instance.users,
+                      ruleId: instance.ruleId,
+                      ruleVersion: instance.ruleVersion,
+                      endReason: instance.endReason,
+                      dismissedOn: instance.dismissedOn
                     })),
                   },
                   null,
@@ -274,11 +292,12 @@ export class JupiterOneMcpServer {
             ],
           };
         } catch (error) {
+          console.error('Error in get-active-alerts:', error);
           return {
             content: [
               {
                 type: 'text',
-                text: `Error getting active alerts: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                text: `Error getting active alerts: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your JupiterOne API credentials and connection.`,
               },
             ],
             isError: true,

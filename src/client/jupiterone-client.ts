@@ -15,7 +15,15 @@ import {
 } from '../types/jupiterone.js';
 
 interface GraphQLResponse<T> {
-  [key: string]: T;
+  [key: string]: T & {
+    instances?: any[];
+    pageInfo?: {
+      endCursor: string | null;
+      hasNextPage: boolean;
+      __typename: string;
+    };
+    __typename: string;
+  };
 }
 
 export class JupiterOneClient {
@@ -42,50 +50,70 @@ export class JupiterOneClient {
     cursor?: string
   ): Promise<ListAlertInstancesResponse> {
     const query = `
-      query ListAlertInstances(
-        $alertStatus: AlertStatus
-        $limit: Int
-        $cursor: String
-      ) {
-        listAlertInstances(
-          alertStatus: $alertStatus
-          limit: $limit
-          cursor: $cursor
-        ) {
+      query listAlertInstances($alertStatus: AlertStatus, $limit: Int, $cursor: String) {
+        listAlertInstances(alertStatus: $alertStatus, limit: $limit, cursor: $cursor) {
           instances {
-            id
-            accountId
-            ruleId
-            level
-            status
-            lastUpdatedOn
-            lastEvaluationBeginOn
-            lastEvaluationEndOn
-            createdOn
-            dismissedOn
-            lastEvaluationResult {
-              rawDataDescriptors {
-                recordCount
-              }
-            }
-            questionRuleInstance {
-              id
-              name
-              description
-              question {
-                queries {
-                  query
-                  name
-                  version
-                }
-              }
-            }
+            ...AlertInstanceFragment
+            __typename
           }
           pageInfo {
             endCursor
             hasNextPage
+            __typename
           }
+          __typename
         }
+      }
+
+      fragment AlertInstanceFragment on AlertInstance {
+        accountId
+        resourceGroupId
+        createdOn
+        dismissedOn
+        endReason
+        id
+        lastEvaluationBeginOn
+        lastEvaluationEndOn
+        lastEvaluationResult {
+          answerText
+          evaluationEndOn
+          outputs {
+            name
+            value
+            __typename
+          }
+          rawDataDescriptors {
+            name
+            recordCount
+            __typename
+          }
+          __typename
+        }
+        lastUpdatedOn
+        level
+        questionRuleInstance {
+          id
+          name
+          description
+          tags
+          pollingInterval
+          labels {
+            labelName
+            labelValue
+            __typename
+          }
+          __typename
+        }
+        reportRuleInstance {
+          name
+          description
+          __typename
+        }
+        ruleId
+        ruleVersion
+        status
+        users
+        __typename
       }
     `;
 
@@ -94,8 +122,26 @@ export class JupiterOneClient {
     if (limit) variables.limit = limit;
     if (cursor) variables.cursor = cursor;
 
-    const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(query, variables);
-    return response.listAlertInstances;
+    try {
+      const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(query, variables);
+
+      if (!response?.listAlertInstances) {
+        throw new Error('Invalid response structure from JupiterOne API');
+      }
+
+      const { instances = [], pageInfo = { endCursor: null, hasNextPage: false, __typename: 'PageInfo' } } = response.listAlertInstances;
+
+      return {
+        listAlertInstances: {
+          instances,
+          pageInfo,
+          __typename: 'ListAlertInstancesResponse'
+        }
+      };
+    } catch (error) {
+      console.error('Error in listAlertInstances:', error);
+      throw error;
+    }
   }
 
   /**
@@ -108,15 +154,26 @@ export class JupiterOneClient {
     let cursor: string | null = null;
     let hasNextPage = true;
 
-    while (hasNextPage) {
-      const response = await this.listAlertInstances(alertStatus, 100, cursor || undefined);
-      allInstances.push(...response.listAlertInstances.instances);
+    try {
+      while (hasNextPage) {
+        const response = await this.listAlertInstances(alertStatus, 100, cursor || undefined);
 
-      cursor = response.listAlertInstances.pageInfo.endCursor;
-      hasNextPage = response.listAlertInstances.pageInfo.hasNextPage;
+        if (!response?.listAlertInstances?.instances) {
+          console.error('Unexpected response structure:', response);
+          break;
+        }
+
+        allInstances.push(...response.listAlertInstances.instances);
+
+        cursor = response.listAlertInstances.pageInfo.endCursor;
+        hasNextPage = response.listAlertInstances.pageInfo.hasNextPage;
+      }
+
+      return allInstances;
+    } catch (error) {
+      console.error('Error in getAllAlertInstances:', error);
+      throw error;
     }
-
-    return allInstances;
   }
 
   /**
@@ -423,19 +480,17 @@ export class JupiterOneClient {
    */
   async evaluateRuleInstance(
     id: string
-  ): Promise<{ outputs: Array<{ name: string; value: any }> }> {
-    const mutation = `
-      mutation EvaluateRuleInstance($id: ID!) {
+  ): Promise<{ id: string; __typename: string }> {
+    const query = `
+      mutation evaluateRuleInstance($id: ID!) {
         evaluateRuleInstance(id: $id) {
-          outputs {
-            name
-            value
-          }
+          id
+          __typename
         }
       }
     `;
 
-    const response = await this.client.request<{ evaluateRuleInstance: { outputs: Array<{ name: string; value: any }> } }>(mutation, { id });
+    const response = await this.client.request<{ evaluateRuleInstance: { id: string; __typename: string } }>(query, { id });
     return response.evaluateRuleInstance;
   }
 

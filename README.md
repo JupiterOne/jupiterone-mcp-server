@@ -48,6 +48,7 @@ npm start
 For local development:
 
 1. Clone the repository and install dependencies:
+
 ```bash
 git clone <repository-url>
 cd jupiterone-mcp
@@ -55,6 +56,7 @@ npm install
 ```
 
 2. Create a `.env` file in the root directory with your JupiterOne credentials:
+
 ```bash
 JUPITERONE_API_KEY=your-api-key
 JUPITERONE_ACCOUNT_ID=your-account-id
@@ -62,15 +64,19 @@ JUPITERONE_BASE_URL=https://graphql.us.jupiterone.io  # Optional, defaults to US
 ```
 
 3. For local development with hot reloading:
+
 ```bash
 npm run dev
 ```
+
 This will:
+
 - Watch for changes in TypeScript files
 - Automatically rebuild when files change
 - Restart the MCP inspector with your environment variables
 
 4. To use your local version globally (required for local testing):
+
 ```bash
 # From the project directory
 npm link
@@ -95,6 +101,7 @@ export JUPITERONE_BASE_URL="https://graphql.us.jupiterone.io"  # Optional, defau
 ### Getting JupiterOne Credentials
 
 1. **API Key**:
+
    - Log into your JupiterOne account
    - Go to Settings → API Keys
    - Create a new API key with appropriate permissions
@@ -117,13 +124,16 @@ JUPITERONE_API_KEY="your-key" JUPITERONE_ACCOUNT_ID="your-account" jupiterone-mc
 ### Available Tools
 
 #### `list-alert-rules`
+
 List all alert rules in your account with optional filtering.
 
 **Parameters:**
+
 - `status` (optional): Filter by alert status (`ACTIVE`, `INACTIVE`, `DISMISSED`)
 - `limit` (optional): Limit the number of results (1-1000)
 
 **Example:**
+
 ```json
 {
   "name": "list-alert-rules",
@@ -135,12 +145,15 @@ List all alert rules in your account with optional filtering.
 ```
 
 #### `get-rule-details`
+
 Get detailed information about a specific rule.
 
 **Parameters:**
+
 - `ruleId` (required): The ID of the rule to retrieve
 
 **Example:**
+
 ```json
 {
   "name": "get-rule-details",
@@ -151,12 +164,15 @@ Get detailed information about a specific rule.
 ```
 
 #### `get-active-alerts`
+
 Get all currently active alerts.
 
 **Parameters:**
+
 - `limit` (optional): Limit the number of results (1-1000)
 
 **Example:**
+
 ```json
 {
   "name": "get-active-alerts",
@@ -167,12 +183,15 @@ Get all currently active alerts.
 ```
 
 #### `evaluate-rule`
+
 Trigger on-demand evaluation of a specific rule.
 
 **Parameters:**
+
 - `ruleId` (required): The ID of the rule to evaluate
 
 **Example:**
+
 ```json
 {
   "name": "evaluate-rule",
@@ -183,11 +202,13 @@ Trigger on-demand evaluation of a specific rule.
 ```
 
 #### `test-connection`
+
 Test the connection to JupiterOne API.
 
 **Parameters:** None
 
 **Example:**
+
 ```json
 {
   "name": "test-connection",
@@ -198,12 +219,15 @@ Test the connection to JupiterOne API.
 ### Available Resources
 
 #### `jupiterone://account/summary`
+
 Provides an overview of your JupiterOne account including:
+
 - Account information
 - Total number of rules
 - Alert statistics by status and severity level
 
 #### `jupiterone://rules/all`
+
 Complete list of all alert rules in your account with full details.
 
 ## MCP Client Integration
@@ -248,6 +272,7 @@ This server interacts with JupiterOne's GraphQL API. The following operations ar
 ### Rate Limits
 
 JupiterOne enforces rate limits based on your account tier:
+
 - **Free**: 10/min, no burst
 - **Freemium**: 30/min, no burst
 - **Enterprise**: 30-60/min with burst
@@ -322,6 +347,7 @@ JUPITERONE_API_KEY="your-api-key" JUPITERONE_ACCOUNT_ID="your-account-id" JUPITE
 ```
 
 **For JupiterOne Dev Environment:**
+
 ```bash
 JUPITERONE_API_KEY="your-api-key" JUPITERONE_ACCOUNT_ID="j1dev" JUPITERONE_BASE_URL="https://graphql.dev.jupiterone.io" npx @modelcontextprotocol/inspector node dist/index.js
 ```
@@ -329,6 +355,7 @@ JUPITERONE_API_KEY="your-api-key" JUPITERONE_ACCOUNT_ID="j1dev" JUPITERONE_BASE_
 #### **Step 5: Test in Web Interface**
 
 The inspector will start and display:
+
 ```
 Starting MCP inspector...
 ⚙️ Proxy server listening on port XXXX
@@ -338,13 +365,15 @@ Starting MCP inspector...
 Open the displayed URL in your browser to access the testing interface where you can:
 
 - **Tools Tab**: Test all 5 available tools interactively
+
   - `test-connection` - Verify API connectivity
-  - `list-alert-rules` - List alert rules with filtering options
+  - `list-rules` - List rules with filtering options
   - `get-rule-details` - Get detailed rule information
   - `get-active-alerts` - View currently active alerts
   - `evaluate-rule` - Trigger on-demand rule evaluation
 
 - **Resources Tab**: View account resources
+
   - `jupiterone://account/summary` - Account overview and statistics
   - `jupiterone://rules/all` - Complete list of all rules
 
@@ -389,10 +418,12 @@ src/
 ### Common Issues
 
 1. **Authentication Errors**
+
    - Verify your API key is correct and has not expired
    - Ensure your account ID matches your JupiterOne account
 
 2. **Rate Limiting**
+
    - Reduce the frequency of requests
    - Consider upgrading your JupiterOne plan for higher limits
 
