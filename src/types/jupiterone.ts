@@ -235,3 +235,117 @@ export interface ListRuleInstancesResponse {
 export interface ListRuleInstancesFilters {
   // Add filter properties as needed
 }
+
+export interface Dashboard {
+  id: string;
+  name: string;
+  userId: string;
+  category: string;
+  supportedUseCase: string;
+  prerequisites: {
+    prerequisitesMet: boolean;
+    preRequisitesGroupsFulfilled: boolean;
+    preRequisitesGroupsRequired: boolean;
+    __typename: string;
+  };
+  isJ1ManagedBoard: boolean;
+  resourceGroupId: string;
+  starred: boolean;
+  _timeUpdated: string;
+  _createdAt: string;
+  __typename: string;
+}
+
+export interface DashboardResponse {
+  getDashboards: Dashboard[];
+}
+
+export interface CreateDashboardInput {
+  name: string;
+  type: string;
+}
+
+export interface CreateDashboardResponse {
+  createDashboard: {
+    id: string;
+    __typename: string;
+  };
+}
+
+export interface DashboardParameter {
+  dashboardId: string;
+  accountId: string;
+  id: string;
+  label: string;
+  name: string;
+  options: any;
+  valueType: string;
+  type: string;
+  default: any;
+  disableCustomInput: boolean;
+  requireValue: boolean;
+  __typename: string;
+}
+
+export interface DashboardWidgetQuery {
+  id: string;
+  name: string;
+  query: string;
+  __typename: string;
+}
+
+export interface DashboardWidgetConfig {
+  queries: DashboardWidgetQuery[];
+  settings: any;
+  postQueryFilters: any;
+  disableQueryPolicyFilters: boolean;
+  __typename: string;
+}
+
+export interface DashboardWidget {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  questionId: string;
+  noResultMessage: string;
+  includeDeleted: boolean;
+  config: DashboardWidgetConfig;
+  __typename: string;
+}
+
+export interface DashboardLayoutItem {
+  static: boolean;
+  moved: boolean;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  i: string;
+  __typename: string;
+}
+
+export interface DashboardLayout {
+  xs: DashboardLayoutItem[];
+  sm: DashboardLayoutItem[];
+  md: DashboardLayoutItem[];
+  lg: DashboardLayoutItem[];
+  xl: DashboardLayoutItem[];
+  __typename: string;
+}
+
+export interface DashboardDetails extends Dashboard {
+  published: boolean;
+  publishedToUserIds: string[];
+  publishedToGroupIds: string[];
+  groupIds: string[];
+  userIds: string[];
+  scopeFilters: any;
+  parameters: DashboardParameter[];
+  widgets: DashboardWidget[];
+  layouts: DashboardLayout;
+}
+
+export interface GetDashboardResponse {
+  getDashboard: DashboardDetails;
+}

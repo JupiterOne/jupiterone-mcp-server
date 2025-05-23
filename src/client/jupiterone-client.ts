@@ -12,6 +12,11 @@ import {
   ListRuleInstancesResponse,
   ListRuleInstancesFilters,
   QuestionRuleInstance,
+  Dashboard,
+  DashboardResponse,
+  CreateDashboardInput,
+  CreateDashboardResponse,
+  GetDashboardResponse,
 } from '../types/jupiterone.js';
 
 interface GraphQLResponse<T> {
@@ -553,6 +558,198 @@ export class JupiterOneClient {
     } catch (error) {
       console.error('Error testing connection to JupiterOne', error);
       return false;
+    }
+  }
+
+  /**
+   * Get all dashboards
+   */
+  async getDashboards(): Promise<Dashboard[]> {
+    const query = `
+      query GetDashboards {
+        getDashboards(options: {includeAllJ1ManagedDashboards: true}) {
+          id
+          name
+          userId
+          category
+          supportedUseCase
+          prerequisites {
+            prerequisitesMet
+            preRequisitesGroupsFulfilled
+            preRequisitesGroupsRequired
+            __typename
+          }
+          isJ1ManagedBoard
+          resourceGroupId
+          starred
+          _timeUpdated
+          _createdAt
+          __typename
+        }
+      }
+    `;
+
+    try {
+      const response = await this.client.request<DashboardResponse>(query);
+      return response.getDashboards;
+    } catch (error) {
+      console.error('Error getting dashboards:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new dashboard
+   */
+  async createDashboard(input: CreateDashboardInput): Promise<CreateDashboardResponse['createDashboard']> {
+    const mutation = `
+      mutation CreateDashboard($input: CreateInsightsDashboardInput!) {
+        createDashboard(input: $input) {
+          id
+          __typename
+        }
+      }
+    `;
+
+    try {
+      const response = await this.client.request<CreateDashboardResponse>(mutation, { input });
+      return response.createDashboard;
+    } catch (error) {
+      console.error('Error creating dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get dashboard details by ID
+   */
+  async getDashboard(dashboardId: string): Promise<GetDashboardResponse['getDashboard']> {
+    const query = `
+      query solo_GetDashboard($dashboardId: String!) {
+        getDashboard(dashboardId: $dashboardId) {
+          ...InsightsDashboard
+          __typename
+        }
+      }
+
+      fragment InsightsDashboard on InsightsDashboard {
+        id
+        name
+        category
+        userId
+        supportedUseCase
+        isJ1ManagedBoard
+        published
+        publishedToUserIds
+        publishedToGroupIds
+        groupIds
+        userIds
+        scopeFilters
+        resourceGroupId
+        starred
+        _timeUpdated
+        _createdAt
+        prerequisites {
+          prerequisitesMet
+          preRequisitesGroupsFulfilled
+          preRequisitesGroupsRequired
+          __typename
+        }
+        parameters {
+          ...DashboardParameterFields
+          __typename
+        }
+        widgets {
+          ...InsightsWidget
+          __typename
+        }
+        layouts {
+          ...InsightsDashboardLayoutConfig
+          __typename
+        }
+        __typename
+      }
+
+      fragment DashboardParameterFields on DashboardParameter {
+        dashboardId
+        accountId
+        id
+        label
+        name
+        options
+        valueType
+        type
+        default
+        disableCustomInput
+        requireValue
+        __typename
+      }
+
+      fragment InsightsWidget on InsightsWidget {
+        id
+        title
+        description
+        type
+        questionId
+        noResultMessage
+        includeDeleted
+        config {
+          queries {
+            id
+            name
+            query
+            __typename
+          }
+          settings
+          postQueryFilters
+          disableQueryPolicyFilters
+          __typename
+        }
+        __typename
+      }
+
+      fragment InsightsDashboardLayoutConfig on InsightsDashboardLayoutConfig {
+        xs {
+          ...InsightsDashboardLayoutItem
+          __typename
+        }
+        sm {
+          ...InsightsDashboardLayoutItem
+          __typename
+        }
+        md {
+          ...InsightsDashboardLayoutItem
+          __typename
+        }
+        lg {
+          ...InsightsDashboardLayoutItem
+          __typename
+        }
+        xl {
+          ...InsightsDashboardLayoutItem
+          __typename
+        }
+        __typename
+      }
+
+      fragment InsightsDashboardLayoutItem on InsightsDashboardLayoutItem {
+        static
+        moved
+        w
+        h
+        x
+        y
+        i
+        __typename
+      }
+    `;
+
+    try {
+      const response = await this.client.request<GetDashboardResponse>(query, { dashboardId });
+      return response.getDashboard;
+    } catch (error) {
+      console.error('Error getting dashboard details:', error);
+      throw error;
     }
   }
 }

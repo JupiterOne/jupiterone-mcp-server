@@ -216,19 +216,176 @@ Test the connection to JupiterOne API.
 }
 ```
 
-### Available Resources
+#### `get-dashboards`
 
-#### `jupiterone://account/summary`
+Get all dashboards in your JupiterOne account, including J1 managed dashboards.
 
-Provides an overview of your JupiterOne account including:
+**Parameters:** None
 
-- Account information
-- Total number of rules
-- Alert statistics by status and severity level
+**Example:**
 
-#### `jupiterone://rules/all`
+```json
+{
+  "name": "get-dashboards",
+  "arguments": {}
+}
+```
 
-Complete list of all alert rules in your account with full details.
+**Response:**
+
+```json
+{
+  "total": 10,
+  "dashboards": [
+    {
+      "id": "dashboard-uuid",
+      "name": "Dashboard Name",
+      "category": "Category",
+      "supportedUseCase": "Use Case",
+      "isJ1ManagedBoard": true,
+      "resourceGroupId": "resource-group-id",
+      "starred": false,
+      "lastUpdated": "2024-03-21T12:00:00Z",
+      "createdAt": "2024-03-21T12:00:00Z",
+      "prerequisites": {
+        "prerequisitesMet": true,
+        "preRequisitesGroupsFulfilled": true,
+        "preRequisitesGroupsRequired": true
+      }
+    }
+  ]
+}
+```
+
+#### `create-dashboard`
+
+Create a new dashboard in your JupiterOne account.
+
+**Parameters:**
+
+- `name` (required): The name of the dashboard
+- `type` (required): The type of the dashboard (e.g., "Account")
+
+**Example:**
+
+```json
+{
+  "name": "create-dashboard",
+  "arguments": {
+    "name": "MCP Test",
+    "type": "Account"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "dashboard-uuid",
+  "name": "MCP Test",
+  "type": "Account"
+}
+```
+
+#### `get-dashboard-details`
+
+Get detailed information about a specific dashboard.
+
+**Parameters:**
+
+- `dashboardId` (required): The ID of the dashboard to retrieve
+
+**Example:**
+
+```json
+{
+  "name": "get-dashboard-details",
+  "arguments": {
+    "dashboardId": "dashboard-uuid"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "dashboard-uuid",
+  "name": "Dashboard Name",
+  "category": "Category",
+  "supportedUseCase": "Use Case",
+  "isJ1ManagedBoard": true,
+  "published": true,
+  "publishedToUserIds": ["user-id-1", "user-id-2"],
+  "publishedToGroupIds": ["group-id-1"],
+  "groupIds": ["group-id-1"],
+  "userIds": ["user-id-1"],
+  "scopeFilters": {},
+  "resourceGroupId": "resource-group-id",
+  "starred": false,
+  "lastUpdated": "2024-03-21T12:00:00Z",
+  "createdAt": "2024-03-21T12:00:00Z",
+  "prerequisites": {
+    "prerequisitesMet": true,
+    "preRequisitesGroupsFulfilled": true,
+    "preRequisitesGroupsRequired": true
+  },
+  "parameters": [
+    {
+      "id": "param-id",
+      "label": "Parameter Label",
+      "name": "param_name",
+      "type": "string",
+      "valueType": "string",
+      "default": "default_value",
+      "options": [],
+      "requireValue": true,
+      "disableCustomInput": false
+    }
+  ],
+  "widgets": [
+    {
+      "id": "widget-id",
+      "title": "Widget Title",
+      "description": "Widget Description",
+      "type": "widget-type",
+      "questionId": "question-id",
+      "noResultMessage": "No results found",
+      "includeDeleted": false,
+      "config": {
+        "queries": [
+          {
+            "id": "query-id",
+            "name": "Query Name",
+            "query": "Find *"
+          }
+        ],
+        "settings": {},
+        "postQueryFilters": {},
+        "disableQueryPolicyFilters": false
+      }
+    }
+  ],
+  "layouts": {
+    "xs": [
+      {
+        "i": "widget-id",
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4,
+        "static": false,
+        "moved": false
+      }
+    ],
+    "sm": [],
+    "md": [],
+    "lg": [],
+    "xl": []
+  }
+}
+```
 
 ## MCP Client Integration
 
@@ -244,7 +401,8 @@ Add to your Claude Desktop configuration:
       "args": ["jupiterone-mcp"],
       "env": {
         "JUPITERONE_API_KEY": "your-api-key",
-        "JUPITERONE_ACCOUNT_ID": "your-account-id"
+        "JUPITERONE_ACCOUNT_ID": "your-account-id",
+        "JUPITERONE_BASE_URL": "https://graphql.us.jupiterone.io"
       }
     }
   }

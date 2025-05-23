@@ -317,6 +317,233 @@ export class JupiterOneMcpServer {
         }
       }
     );
+
+    // Tool: Get dashboards
+    this.server.tool(
+      'get-dashboards',
+      {},
+      async () => {
+        try {
+          const dashboards = await this.client.getDashboards();
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: dashboards.length,
+                    dashboards: dashboards.map((dashboard) => ({
+                      id: dashboard.id,
+                      name: dashboard.name,
+                      category: dashboard.category,
+                      supportedUseCase: dashboard.supportedUseCase,
+                      isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
+                      resourceGroupId: dashboard.resourceGroupId,
+                      starred: dashboard.starred,
+                      lastUpdated: dashboard._timeUpdated,
+                      createdAt: dashboard._createdAt,
+                      prerequisites: dashboard.prerequisites ? {
+                        prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
+                        preRequisitesGroupsFulfilled: dashboard.prerequisites.preRequisitesGroupsFulfilled,
+                        preRequisitesGroupsRequired: dashboard.prerequisites.preRequisitesGroupsRequired,
+                      } : null,
+                    })),
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting dashboards: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Create dashboard
+    this.server.tool(
+      'create-dashboard',
+      {
+        name: z.string(),
+        type: z.string(),
+      },
+      async ({ name, type }) => {
+        try {
+          const result = await this.client.createDashboard({ name, type });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    id: result.id,
+                    name,
+                    type,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error creating dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Get dashboard details
+    this.server.tool(
+      'get-dashboard-details',
+      {
+        dashboardId: z.string(),
+      },
+      async ({ dashboardId }) => {
+        try {
+          const dashboard = await this.client.getDashboard(dashboardId);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    id: dashboard.id,
+                    name: dashboard.name,
+                    category: dashboard.category,
+                    supportedUseCase: dashboard.supportedUseCase,
+                    isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
+                    published: dashboard.published,
+                    publishedToUserIds: dashboard.publishedToUserIds,
+                    publishedToGroupIds: dashboard.publishedToGroupIds,
+                    groupIds: dashboard.groupIds,
+                    userIds: dashboard.userIds,
+                    scopeFilters: dashboard.scopeFilters,
+                    resourceGroupId: dashboard.resourceGroupId,
+                    starred: dashboard.starred,
+                    lastUpdated: dashboard._timeUpdated,
+                    createdAt: dashboard._createdAt,
+                    prerequisites: dashboard.prerequisites ? {
+                      prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
+                      preRequisitesGroupsFulfilled: dashboard.prerequisites.preRequisitesGroupsFulfilled,
+                      preRequisitesGroupsRequired: dashboard.prerequisites.preRequisitesGroupsRequired,
+                    } : null,
+                    parameters: dashboard.parameters.map(param => ({
+                      id: param.id,
+                      label: param.label,
+                      name: param.name,
+                      type: param.type,
+                      valueType: param.valueType,
+                      default: param.default,
+                      options: param.options,
+                      requireValue: param.requireValue,
+                      disableCustomInput: param.disableCustomInput,
+                    })),
+                    widgets: dashboard.widgets.map(widget => ({
+                      id: widget.id,
+                      title: widget.title,
+                      description: widget.description,
+                      type: widget.type,
+                      questionId: widget.questionId,
+                      noResultMessage: widget.noResultMessage,
+                      includeDeleted: widget.includeDeleted,
+                      config: {
+                        queries: widget.config.queries.map(query => ({
+                          id: query.id,
+                          name: query.name,
+                          query: query.query,
+                        })),
+                        settings: widget.config.settings,
+                        postQueryFilters: widget.config.postQueryFilters,
+                        disableQueryPolicyFilters: widget.config.disableQueryPolicyFilters,
+                      },
+                    })),
+                    layouts: {
+                      xs: dashboard.layouts.xs.map(item => ({
+                        i: item.i,
+                        x: item.x,
+                        y: item.y,
+                        w: item.w,
+                        h: item.h,
+                        static: item.static,
+                        moved: item.moved,
+                      })),
+                      sm: dashboard.layouts.sm.map(item => ({
+                        i: item.i,
+                        x: item.x,
+                        y: item.y,
+                        w: item.w,
+                        h: item.h,
+                        static: item.static,
+                        moved: item.moved,
+                      })),
+                      md: dashboard.layouts.md.map(item => ({
+                        i: item.i,
+                        x: item.x,
+                        y: item.y,
+                        w: item.w,
+                        h: item.h,
+                        static: item.static,
+                        moved: item.moved,
+                      })),
+                      lg: dashboard.layouts.lg.map(item => ({
+                        i: item.i,
+                        x: item.x,
+                        y: item.y,
+                        w: item.w,
+                        h: item.h,
+                        static: item.static,
+                        moved: item.moved,
+                      })),
+                      xl: dashboard.layouts.xl.map(item => ({
+                        i: item.i,
+                        x: item.x,
+                        y: item.y,
+                        w: item.w,
+                        h: item.h,
+                        static: item.static,
+                        moved: item.moved,
+                      })),
+                    },
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting dashboard details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {
