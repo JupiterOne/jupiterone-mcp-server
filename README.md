@@ -387,6 +387,133 @@ Get detailed information about a specific dashboard.
 }
 ```
 
+#### `create-inline-question-rule`
+
+Create a new inline question rule instance that monitors your JupiterOne environment and triggers alerts based on specified conditions.
+
+**Parameters:**
+
+- `name` (required): Name of the rule
+- `description` (required): Description of the rule
+- `pollingInterval` (required): How frequently to evaluate the rule (`DISABLED`, `THIRTY_MINUTES`, `ONE_HOUR`, `FOUR_HOURS`, `EIGHT_HOURS`, `TWELVE_HOURS`, `ONE_DAY`, `ONE_WEEK`)
+- `outputs` (required): Array of output fields from the rule evaluation
+- `queries` (required): Array of J1QL queries that define what entities to match
+  - `query` (required): J1QL query string
+  - `name` (required): Name identifier for the query
+  - `version` (optional): Version of the query
+  - `includeDeleted` (optional): Whether to include deleted entities
+- `operations` (required): Array of operations that define when and what actions to take
+  - `when` (required): Condition that triggers the actions
+    - `type`: Must be `FILTER`
+    - `condition`: Filter condition array
+    - `version` (optional): Version of the filter condition
+  - `actions` (required): Array of actions to perform when condition is met
+    - `type` (required): Action type (e.g., `SET_PROPERTY`, `CREATE_ALERT`)
+    - `targetProperty` (optional): Property to set (for `SET_PROPERTY` actions)
+    - `targetValue` (optional): Value to set (for `SET_PROPERTY` actions)
+- `notifyOnFailure` (optional): Whether to notify on failure
+- `triggerActionsOnNewEntitiesOnly` (optional): Whether to trigger actions only on new entities
+- `ignorePreviousResults` (optional): Whether to ignore previous results
+- `specVersion` (optional): Specification version
+- `tags` (optional): Array of tags for categorizing the rule
+- `templates` (optional): Template variables object
+
+**Example:**
+
+```json
+{
+  "name": "create-inline-question-rule",
+  "arguments": {
+    "name": "Unencrypted Critical Data Stores",
+    "description": "Monitor for critical data stores that are not encrypted",
+    "notifyOnFailure": true,
+    "triggerActionsOnNewEntitiesOnly": true,
+    "ignorePreviousResults": false,
+    "pollingInterval": "ONE_WEEK",
+    "outputs": ["alertLevel"],
+    "specVersion": 1,
+    "tags": ["security", "encryption"],
+    "templates": {},
+    "queries": [
+      {
+        "query": "Find DataStore with classification='critical' and encrypted=false as d return d.tag.AccountName as Account, d.displayName as UnencryptedDataStores, d._type as Type, d.encrypted as Encrypted",
+        "name": "query0",
+        "version": "v1",
+        "includeDeleted": false
+      }
+    ],
+    "operations": [
+      {
+        "when": {
+          "type": "FILTER",
+          "condition": ["AND", ["queries.query0.total", ">", 0]]
+        },
+        "actions": [
+          {
+            "type": "SET_PROPERTY",
+            "targetProperty": "alertLevel",
+            "targetValue": "HIGH"
+          },
+          {
+            "type": "CREATE_ALERT"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "rule": {
+    "id": "rule-uuid",
+    "name": "Unencrypted Critical Data Stores",
+    "description": "Monitor for critical data stores that are not encrypted",
+    "version": "1.0.0",
+    "pollingInterval": "ONE_WEEK",
+    "outputs": ["alertLevel"],
+    "specVersion": 1,
+    "notifyOnFailure": true,
+    "triggerActionsOnNewEntitiesOnly": true,
+    "ignorePreviousResults": false,
+    "tags": ["security", "encryption"],
+    "question": {
+      "queries": [
+        {
+          "query": "Find DataStore with classification='critical' and encrypted=false as d return d.tag.AccountName as Account, d.displayName as UnencryptedDataStores, d._type as Type, d.encrypted as Encrypted",
+          "name": "query0",
+          "includeDeleted": false
+        }
+      ]
+    },
+    "operations": [
+      {
+        "when": {
+          "type": "FILTER",
+          "condition": ["AND", ["queries.query0.total", ">", 0]]
+        },
+        "actions": [
+          {
+            "type": "SET_PROPERTY",
+            "targetProperty": "alertLevel",
+            "targetValue": "HIGH"
+          },
+          {
+            "type": "CREATE_ALERT"
+          }
+        ]
+      }
+    ],
+    "latestAlertId": null,
+    "latestAlertIsActive": false
+  }
+}
+```
+
 ## MCP Client Integration
 
 ### Claude Desktop
@@ -554,69 +681,3 @@ JUPITERONE_API_KEY="your-api-key" npx @modelcontextprotocol/inspector npx jupite
 ### Project Structure
 
 ```
-src/
-├── types/           # TypeScript type definitions
-│   └── jupiterone.ts
-├── client/          # JupiterOne API client
-│   └── jupiterone-client.ts
-├── server/          # MCP server implementation
-│   └── mcp-server.ts
-└── index.ts         # Main entry point
-```
-
-## Security Considerations
-
-- **API Keys**: Never commit API keys to version control
-- **Permissions**: Use API keys with minimal required permissions
-- **Network**: The server connects to JupiterOne's GraphQL endpoint over HTTPS
-- **Data**: No sensitive data is cached or stored locally
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Authentication Errors**
-
-   - Verify your API key is correct and has not expired
-   - Ensure your account ID matches your JupiterOne account
-
-2. **Rate Limiting**
-
-   - Reduce the frequency of requests
-   - Consider upgrading your JupiterOne plan for higher limits
-
-3. **Network Issues**
-   - Check your internet connection
-   - Verify the base URL is correct for your region
-
-### Debug Mode
-
-Set the `DEBUG` environment variable for verbose logging:
-
-```bash
-DEBUG=jupiterone-mcp* jupiterone-mcp
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-- **Issues**: Report bugs and feature requests on GitHub
-- **Documentation**: JupiterOne API documentation at https://docs.jupiterone.io/
-- **Community**: Join the MCP community discussions
-
-## Related Projects
-
-- [Model Context Protocol](https://modelcontextprotocol.io/)
-- [JupiterOne](https://jupiterone.com/)
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)

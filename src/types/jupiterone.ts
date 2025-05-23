@@ -25,19 +25,16 @@ export interface Question {
 // Operation types
 export interface FilterCondition {
   type: 'FILTER';
-  version: number;
+  version?: number;
   condition: any[];
 }
 
-export type Action =
-  | {
-      type: 'SET_PROPERTY';
-      targetProperty: string;
-      targetValue: any;
-    }
-  | {
-      type: 'CREATE_ALERT';
-    };
+export type Action = {
+  type: string;
+  targetProperty?: string;
+  targetValue?: any;
+  [key: string]: any;
+};
 
 export interface Operation {
   when: FilterCondition;
@@ -99,13 +96,33 @@ export interface AlertRuleInstance {
 // Rule instance types
 export interface InlineQuestionRuleInstance {
   id: string;
+  resourceGroupId: string | null;
+  accountId: string;
   name: string;
   description: string;
   version: string;
+  lastEvaluationStartOn: string | null;
+  lastEvaluationEndOn: string | null;
+  evaluationStep: string | null;
+  specVersion: string | null;
+  notifyOnFailure: boolean | null;
+  triggerActionsOnNewEntitiesOnly: boolean | null;
+  ignorePreviousResults: boolean | null;
   pollingInterval: PollingInterval;
-  question: Question;
-  operations: Operation[];
+  templates: any[] | null;
   outputs: string[];
+  labels: RuleInstanceLabel[] | null;
+  question: EnhancedQuestion;
+  questionId: string | null;
+  latest: boolean | null;
+  deleted: boolean | null;
+  type: string | null;
+  operations: RuleInstanceOperation[] | null;
+  latestAlertId: string | null;
+  latestAlertIsActive: boolean | null;
+  state: RuleInstanceState | null;
+  tags: string[] | null;
+  remediationSteps: string | null;
 }
 
 export interface ReferencedQuestionRuleInstance {
@@ -138,14 +155,27 @@ export interface ListAlertInstancesResponse {
 export interface CreateInlineQuestionRuleInstanceInput {
   name: string;
   description: string;
-  version: string;
-  pollingInterval: PollingInterval;
-  outputs: string[];
+  notifyOnFailure?: boolean;
+  triggerActionsOnNewEntitiesOnly?: boolean;
+  ignorePreviousResults?: boolean;
   operations: Operation[];
-  question: Question;
+  outputs: string[];
+  pollingInterval: PollingInterval;
+  question: {
+    queries: {
+      query: string;
+      name: string;
+      version?: string;
+      includeDeleted?: boolean;
+    }[];
+  };
+  specVersion?: number;
+  tags?: string[];
+  templates?: Record<string, any>;
 }
 
-export interface UpdateInlineQuestionRuleInstanceInput extends CreateInlineQuestionRuleInstanceInput {
+export interface UpdateInlineQuestionRuleInstanceInput
+  extends CreateInlineQuestionRuleInstanceInput {
   id: string;
 }
 
@@ -160,7 +190,8 @@ export interface CreateReferencedQuestionRuleInstanceInput {
   questionName?: string;
 }
 
-export interface UpdateReferencedQuestionRuleInstanceInput extends CreateReferencedQuestionRuleInstanceInput {
+export interface UpdateReferencedQuestionRuleInstanceInput
+  extends CreateReferencedQuestionRuleInstanceInput {
   id: string;
 }
 

@@ -128,20 +128,26 @@ export class JupiterOneClient {
     if (cursor) variables.cursor = cursor;
 
     try {
-      const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(query, variables);
+      const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(
+        query,
+        variables
+      );
 
       if (!response?.listAlertInstances) {
         throw new Error('Invalid response structure from JupiterOne API');
       }
 
-      const { instances = [], pageInfo = { endCursor: null, hasNextPage: false, __typename: 'PageInfo' } } = response.listAlertInstances;
+      const {
+        instances = [],
+        pageInfo = { endCursor: null, hasNextPage: false, __typename: 'PageInfo' },
+      } = response.listAlertInstances;
 
       return {
         listAlertInstances: {
           instances,
           pageInfo,
-          __typename: 'ListAlertInstancesResponse'
-        }
+          __typename: 'ListAlertInstancesResponse',
+        },
       };
     } catch (error) {
       console.error('Error in listAlertInstances:', error);
@@ -263,7 +269,9 @@ export class JupiterOneClient {
     if (cursor) variables.cursor = cursor;
     if (filters) variables.filters = filters;
 
-    const response = await this.client.request<{ listRuleInstances: ListRuleInstancesResponse['listRuleInstances'] }>(query, variables);
+    const response = await this.client.request<{
+      listRuleInstances: ListRuleInstancesResponse['listRuleInstances'];
+    }>(query, variables);
     return { listRuleInstances: response.listRuleInstances };
   }
 
@@ -297,42 +305,68 @@ export class JupiterOneClient {
     instance: CreateInlineQuestionRuleInstanceInput
   ): Promise<InlineQuestionRuleInstance> {
     const mutation = `
-      mutation CreateInlineQuestionRuleInstance(
-        $instance: CreateInlineQuestionRuleInstanceInput!
-      ) {
+      mutation createInlineQuestionRuleInstance($instance: CreateInlineQuestionRuleInstanceInput!) {
         createInlineQuestionRuleInstance(instance: $instance) {
-          id
-          name
-          description
-          version
-          pollingInterval
-          question {
-            queries {
-              query
-              name
-              version
-            }
-          }
-          operations {
-            when {
-              type
-              version
-              condition
-            }
-            actions {
-              type
-              ... on SetPropertyAction {
-                targetProperty
-                targetValue
-              }
-            }
-          }
-          outputs
+          ...RuleInstanceFields
+          __typename
         }
+      }
+
+      fragment RuleInstanceFields on QuestionRuleInstance {
+        id
+        resourceGroupId
+        accountId
+        name
+        description
+        version
+        lastEvaluationStartOn
+        lastEvaluationEndOn
+        evaluationStep
+        specVersion
+        notifyOnFailure
+        triggerActionsOnNewEntitiesOnly
+        ignorePreviousResults
+        pollingInterval
+        templates
+        outputs
+        labels {
+          labelName
+          labelValue
+          __typename
+        }
+        question {
+          queries {
+            query
+            name
+            includeDeleted
+            __typename
+          }
+          __typename
+        }
+        questionId
+        latest
+        deleted
+        type
+        operations {
+          when
+          actions
+          __typename
+        }
+        latestAlertId
+        latestAlertIsActive
+        state {
+          actions
+          __typename
+        }
+        tags
+        remediationSteps
+        __typename
       }
     `;
 
-    const response = await this.client.request<{ createInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
+    const response = await this.client.request<{
+      createInlineQuestionRuleInstance: InlineQuestionRuleInstance;
+    }>(mutation, { instance });
     return response.createInlineQuestionRuleInstance;
   }
 
@@ -378,7 +412,9 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = await this.client.request<{ updateInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
+    const response = await this.client.request<{
+      updateInlineQuestionRuleInstance: InlineQuestionRuleInstance;
+    }>(mutation, { instance });
     return response.updateInlineQuestionRuleInstance;
   }
 
@@ -419,7 +455,9 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = await this.client.request<{ createReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
+    const response = await this.client.request<{
+      createReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance;
+    }>(mutation, { instance });
     return response.createReferencedQuestionRuleInstance;
   }
 
@@ -460,7 +498,9 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = await this.client.request<{ updateReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
+    const response = await this.client.request<{
+      updateReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance;
+    }>(mutation, { instance });
     return response.updateReferencedQuestionRuleInstance;
   }
 
@@ -476,16 +516,16 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = await this.client.request<{ deleteRuleInstance: { id: string } }>(mutation, { id });
+    const response = await this.client.request<{ deleteRuleInstance: { id: string } }>(mutation, {
+      id,
+    });
     return response.deleteRuleInstance;
   }
 
   /**
    * Trigger an alert rule on demand
    */
-  async evaluateRuleInstance(
-    id: string
-  ): Promise<{ id: string; __typename: string }> {
+  async evaluateRuleInstance(id: string): Promise<{ id: string; __typename: string }> {
     const query = `
       mutation evaluateRuleInstance($id: ID!) {
         evaluateRuleInstance(id: $id) {
@@ -495,7 +535,9 @@ export class JupiterOneClient {
       }
     `;
 
-    const response = await this.client.request<{ evaluateRuleInstance: { id: string; __typename: string } }>(query, { id });
+    const response = await this.client.request<{
+      evaluateRuleInstance: { id: string; __typename: string };
+    }>(query, { id });
     return response.evaluateRuleInstance;
   }
 
@@ -519,7 +561,9 @@ export class JupiterOneClient {
     `;
 
     try {
-      const response = await this.client.request<{ iamGetAccount: { accountId: string; accountName?: string } }>(query);
+      const response = await this.client.request<{
+        iamGetAccount: { accountId: string; accountName?: string };
+      }>(query);
       return {
         accountId: response.iamGetAccount.accountId,
         name: response.iamGetAccount.accountName,
@@ -601,7 +645,9 @@ export class JupiterOneClient {
   /**
    * Create a new dashboard
    */
-  async createDashboard(input: CreateDashboardInput): Promise<CreateDashboardResponse['createDashboard']> {
+  async createDashboard(
+    input: CreateDashboardInput
+  ): Promise<CreateDashboardResponse['createDashboard']> {
     const mutation = `
       mutation CreateDashboard($input: CreateInsightsDashboardInput!) {
         createDashboard(input: $input) {

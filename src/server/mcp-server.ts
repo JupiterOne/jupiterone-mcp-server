@@ -319,56 +319,56 @@ export class JupiterOneMcpServer {
     );
 
     // Tool: Get dashboards
-    this.server.tool(
-      'get-dashboards',
-      {},
-      async () => {
-        try {
-          const dashboards = await this.client.getDashboards();
+    this.server.tool('get-dashboards', {}, async () => {
+      try {
+        const dashboards = await this.client.getDashboards();
 
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  {
-                    total: dashboards.length,
-                    dashboards: dashboards.map((dashboard) => ({
-                      id: dashboard.id,
-                      name: dashboard.name,
-                      category: dashboard.category,
-                      supportedUseCase: dashboard.supportedUseCase,
-                      isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
-                      resourceGroupId: dashboard.resourceGroupId,
-                      starred: dashboard.starred,
-                      lastUpdated: dashboard._timeUpdated,
-                      createdAt: dashboard._createdAt,
-                      prerequisites: dashboard.prerequisites ? {
-                        prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
-                        preRequisitesGroupsFulfilled: dashboard.prerequisites.preRequisitesGroupsFulfilled,
-                        preRequisitesGroupsRequired: dashboard.prerequisites.preRequisitesGroupsRequired,
-                      } : null,
-                    })),
-                  },
-                  null,
-                  2
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Error getting dashboards: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              },
-            ],
-            isError: true,
-          };
-        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  total: dashboards.length,
+                  dashboards: dashboards.map((dashboard) => ({
+                    id: dashboard.id,
+                    name: dashboard.name,
+                    category: dashboard.category,
+                    supportedUseCase: dashboard.supportedUseCase,
+                    isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
+                    resourceGroupId: dashboard.resourceGroupId,
+                    starred: dashboard.starred,
+                    lastUpdated: dashboard._timeUpdated,
+                    createdAt: dashboard._createdAt,
+                    prerequisites: dashboard.prerequisites
+                      ? {
+                          prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
+                          preRequisitesGroupsFulfilled:
+                            dashboard.prerequisites.preRequisitesGroupsFulfilled,
+                          preRequisitesGroupsRequired:
+                            dashboard.prerequisites.preRequisitesGroupsRequired,
+                        }
+                      : null,
+                  })),
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error getting dashboards: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
       }
-    );
+    });
 
     // Tool: Create dashboard
     this.server.tool(
@@ -442,12 +442,16 @@ export class JupiterOneMcpServer {
                     starred: dashboard.starred,
                     lastUpdated: dashboard._timeUpdated,
                     createdAt: dashboard._createdAt,
-                    prerequisites: dashboard.prerequisites ? {
-                      prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
-                      preRequisitesGroupsFulfilled: dashboard.prerequisites.preRequisitesGroupsFulfilled,
-                      preRequisitesGroupsRequired: dashboard.prerequisites.preRequisitesGroupsRequired,
-                    } : null,
-                    parameters: dashboard.parameters.map(param => ({
+                    prerequisites: dashboard.prerequisites
+                      ? {
+                          prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
+                          preRequisitesGroupsFulfilled:
+                            dashboard.prerequisites.preRequisitesGroupsFulfilled,
+                          preRequisitesGroupsRequired:
+                            dashboard.prerequisites.preRequisitesGroupsRequired,
+                        }
+                      : null,
+                    parameters: dashboard.parameters.map((param) => ({
                       id: param.id,
                       label: param.label,
                       name: param.name,
@@ -458,7 +462,7 @@ export class JupiterOneMcpServer {
                       requireValue: param.requireValue,
                       disableCustomInput: param.disableCustomInput,
                     })),
-                    widgets: dashboard.widgets.map(widget => ({
+                    widgets: dashboard.widgets.map((widget) => ({
                       id: widget.id,
                       title: widget.title,
                       description: widget.description,
@@ -467,7 +471,7 @@ export class JupiterOneMcpServer {
                       noResultMessage: widget.noResultMessage,
                       includeDeleted: widget.includeDeleted,
                       config: {
-                        queries: widget.config.queries.map(query => ({
+                        queries: widget.config.queries.map((query) => ({
                           id: query.id,
                           name: query.name,
                           query: query.query,
@@ -478,7 +482,7 @@ export class JupiterOneMcpServer {
                       },
                     })),
                     layouts: {
-                      xs: dashboard.layouts.xs.map(item => ({
+                      xs: dashboard.layouts.xs.map((item) => ({
                         i: item.i,
                         x: item.x,
                         y: item.y,
@@ -487,7 +491,7 @@ export class JupiterOneMcpServer {
                         static: item.static,
                         moved: item.moved,
                       })),
-                      sm: dashboard.layouts.sm.map(item => ({
+                      sm: dashboard.layouts.sm.map((item) => ({
                         i: item.i,
                         x: item.x,
                         y: item.y,
@@ -496,7 +500,7 @@ export class JupiterOneMcpServer {
                         static: item.static,
                         moved: item.moved,
                       })),
-                      md: dashboard.layouts.md.map(item => ({
+                      md: dashboard.layouts.md.map((item) => ({
                         i: item.i,
                         x: item.x,
                         y: item.y,
@@ -505,7 +509,7 @@ export class JupiterOneMcpServer {
                         static: item.static,
                         moved: item.moved,
                       })),
-                      lg: dashboard.layouts.lg.map(item => ({
+                      lg: dashboard.layouts.lg.map((item) => ({
                         i: item.i,
                         x: item.x,
                         y: item.y,
@@ -514,7 +518,7 @@ export class JupiterOneMcpServer {
                         static: item.static,
                         moved: item.moved,
                       })),
-                      xl: dashboard.layouts.xl.map(item => ({
+                      xl: dashboard.layouts.xl.map((item) => ({
                         i: item.i,
                         x: item.x,
                         y: item.y,
@@ -537,6 +541,212 @@ export class JupiterOneMcpServer {
               {
                 type: 'text',
                 text: `Error getting dashboard details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Create inline question rule instance
+    this.server.tool(
+      'create-inline-question-rule',
+      `JupiterOne Rule Creation Tool - Enhanced Description
+Purpose: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
+Key Requirements for Success:
+1. Condition Format (Critical)
+The condition parameter must use JupiterOne's specific array format:
+
+Structure: ["LOGICAL_OPERATOR", [left_value, operator, right_value]]
+Example: ["AND", ["queries.queryName.total", ">", 0]]
+Supported operators: >, <, >=, <=, =, !=
+Logical operators: "AND", "OR"
+
+2. Operations Structure
+The when clause should only contain:
+
+type: Always "FILTER"
+condition: The array format described above
+Do NOT include: version, specVersion (these belong at the rule level, not in the when clause)
+
+3. Query Naming Convention
+
+Query names in the queries array must match the references in conditions
+Example: If query name is "users", reference it as "queries.users.total"
+
+4. New Entity Detection
+
+Use triggerActionsOnNewEntitiesOnly: true to only alert on genuinely new entities
+This prevents re-alerting on existing entities every polling cycle
+Essential for "new user" or "new resource" type alerts
+
+5. Common Patterns
+New Entity Monitoring:
+json{
+  "condition": ["AND", ["queries.entityQuery.total", ">", 0]],
+  "triggerActionsOnNewEntitiesOnly": true
+}
+Threshold-based Alerts:
+json{
+  "condition": ["AND", ["queries.entityQuery.total", ">=", 5]]
+}
+6. Debugging Tips
+
+If you get "Invalid conjunction operator" errors, check the condition array format
+If you get "additional properties" errors, remove extra fields from the when clause
+Always reference existing rules with get-rule-details to see working examples
+Test with simple conditions first, then add complexity
+
+7. Best Practices
+
+Use descriptive query names that match their purpose
+Include relevant entity fields in outputs for alert context
+Set appropriate polling intervals (30 minutes to 1 day typically)
+Add meaningful tags for rule organization
+Use notifyOnFailure: true to catch rule execution issues
+      `,
+      {
+        name: z.string().describe('Name of the rule'),
+        description: z.string().describe('Description of the rule'),
+        notifyOnFailure: z.boolean().optional().describe('Whether to notify on failure'),
+        triggerActionsOnNewEntitiesOnly: z
+          .boolean()
+          .optional()
+          .describe('Whether to trigger actions only on new entities'),
+        ignorePreviousResults: z
+          .boolean()
+          .optional()
+          .describe('Whether to ignore previous results'),
+        pollingInterval: z
+          .enum([
+            'DISABLED',
+            'THIRTY_MINUTES',
+            'ONE_HOUR',
+            'FOUR_HOURS',
+            'EIGHT_HOURS',
+            'TWELVE_HOURS',
+            'ONE_DAY',
+            'ONE_WEEK',
+          ])
+          .describe('How frequently to evaluate the rule'),
+        outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
+        specVersion: z.number().optional().describe('Specification version'),
+        tags: z.array(z.string()).optional().describe('Tags for categorizing the rule'),
+        templates: z.record(z.any()).optional().describe('Template variables'),
+        queries: z
+          .array(
+            z.object({
+              query: z.string().describe('J1QL query string'),
+              name: z.string().describe('Name identifier for the query'),
+              version: z.string().optional().describe('Version of the query'),
+              includeDeleted: z
+                .boolean()
+                .optional()
+                .describe('Whether to include deleted entities'),
+            })
+          )
+          .describe('J1QL queries that define what entities to match'),
+        operations: z
+          .array(
+            z.object({
+              when: z
+                .object({
+                  type: z.literal('FILTER'),
+                  version: z.number().optional().describe('Version of the filter condition'),
+                  condition: z.array(z.any()).describe('Filter condition array'),
+                })
+                .describe('Condition that triggers the actions'),
+              actions: z
+                .array(
+                  z.object({
+                    type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
+                    targetProperty: z
+                      .string()
+                      .optional()
+                      .describe('Property to set (for SET_PROPERTY actions)'),
+                    targetValue: z
+                      .any()
+                      .optional()
+                      .describe('Value to set (for SET_PROPERTY actions)'),
+                  })
+                )
+                .describe('Actions to perform when condition is met'),
+            })
+          )
+          .describe('Operations that define when and what actions to take'),
+      },
+      async ({
+        name,
+        description,
+        notifyOnFailure,
+        triggerActionsOnNewEntitiesOnly,
+        ignorePreviousResults,
+        pollingInterval,
+        outputs,
+        specVersion,
+        tags,
+        templates,
+        queries,
+        operations,
+      }) => {
+        try {
+          const instance = {
+            name,
+            description,
+            notifyOnFailure,
+            triggerActionsOnNewEntitiesOnly,
+            ignorePreviousResults,
+            pollingInterval,
+            outputs,
+            specVersion,
+            tags,
+            templates,
+            question: {
+              queries,
+            },
+            operations,
+          };
+
+          const result = await this.client.createInlineQuestionRuleInstance(instance);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    rule: {
+                      id: result.id,
+                      name: result.name,
+                      description: result.description,
+                      version: result.version,
+                      pollingInterval: result.pollingInterval,
+                      outputs: result.outputs,
+                      specVersion: result.specVersion,
+                      notifyOnFailure: result.notifyOnFailure,
+                      triggerActionsOnNewEntitiesOnly: result.triggerActionsOnNewEntitiesOnly,
+                      ignorePreviousResults: result.ignorePreviousResults,
+                      tags: result.tags,
+                      question: result.question,
+                      operations: result.operations,
+                      latestAlertId: result.latestAlertId,
+                      latestAlertIsActive: result.latestAlertIsActive,
+                    },
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error creating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,
