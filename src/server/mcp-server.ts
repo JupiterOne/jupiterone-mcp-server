@@ -104,11 +104,11 @@ export class JupiterOneMcpServer {
                 text: JSON.stringify(
                   {
                     id: rule.id,
+                    resourceGroupId: rule.resourceGroupId,
                     accountId: rule.accountId,
                     name: rule.name,
                     description: rule.description,
                     version: rule.version,
-                    pollingInterval: rule.pollingInterval,
                     lastEvaluationStartOn: rule.lastEvaluationStartOn,
                     lastEvaluationEndOn: rule.lastEvaluationEndOn,
                     evaluationStep: rule.evaluationStep,
@@ -116,19 +116,35 @@ export class JupiterOneMcpServer {
                     notifyOnFailure: rule.notifyOnFailure,
                     triggerActionsOnNewEntitiesOnly: rule.triggerActionsOnNewEntitiesOnly,
                     ignorePreviousResults: rule.ignorePreviousResults,
+                    pollingInterval: rule.pollingInterval,
+                    templates: rule.templates,
                     outputs: rule.outputs,
-                    labels: rule.labels,
+                    labels: rule.labels?.map(label => ({
+                      labelName: label.labelName,
+                      labelValue: label.labelValue
+                    })) || [],
+                    question: rule.question ? {
+                      queries: rule.question.queries?.map(query => ({
+                        query: query.query,
+                        name: query.name,
+                        includeDeleted: query.includeDeleted
+                      })) || []
+                    } : null,
                     questionId: rule.questionId,
                     latest: rule.latest,
                     deleted: rule.deleted,
                     type: rule.type,
-                    operations: rule.operations,
+                    operations: rule.operations?.map(op => ({
+                      when: op.when,
+                      actions: op.actions
+                    })) || [],
                     latestAlertId: rule.latestAlertId,
                     latestAlertIsActive: rule.latestAlertIsActive,
-                    state: rule.state,
+                    state: rule.state ? {
+                      actions: rule.state.actions
+                    } : null,
                     tags: rule.tags,
-                    remediationSteps: rule.remediationSteps,
-                    queries: rule.question?.queries || [],
+                    remediationSteps: rule.remediationSteps
                   },
                   null,
                   2

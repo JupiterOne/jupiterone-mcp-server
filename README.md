@@ -29,11 +29,57 @@ jupiterone-mcp
 ### From Source
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd jupiterone-mcp
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start the server
+npm start
+```
+
+## Development
+
+For local development:
+
+1. Clone the repository and install dependencies:
+```bash
 git clone <repository-url>
 cd jupiterone-mcp
 npm install
-npm run build
-npm start
+```
+
+2. Create a `.env` file in the root directory with your JupiterOne credentials:
+```bash
+JUPITERONE_API_KEY=your-api-key
+JUPITERONE_ACCOUNT_ID=your-account-id
+JUPITERONE_BASE_URL=https://graphql.us.jupiterone.io  # Optional, defaults to US endpoint
+```
+
+3. For local development with hot reloading:
+```bash
+npm run dev
+```
+This will:
+- Watch for changes in TypeScript files
+- Automatically rebuild when files change
+- Restart the MCP inspector with your environment variables
+
+4. To use your local version globally (required for local testing):
+```bash
+# From the project directory
+npm link
+
+# Now you can use jupiterone-mcp from anywhere
+jupiterone-mcp
+
+# To unlink when done
+npm unlink
 ```
 
 ## Configuration
