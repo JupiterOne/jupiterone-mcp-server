@@ -122,6 +122,10 @@ export class JupiterOneClient {
     return this.dashboardService.createDashboardWidget(...args);
   }
 
+  async updateDashboard(...args: Parameters<DashboardService['updateDashboard']>) {
+    return this.dashboardService.updateDashboard(...args);
+  }
+
   // Account methods
   async getAccountInfo() {
     return this.accountService.getAccountInfo();

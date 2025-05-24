@@ -1460,6 +1460,85 @@ export class JupiterOneMcpServer {
         }
       }
     );
+
+    // Tool: Update dashboard
+    this.server.tool(
+      'update-dashboard',
+      loadDescription('update-dashboard.md'),
+      {
+        dashboardId: z.string().describe('ID of the dashboard to update'),
+        layouts: z.object({
+          xs: z.array(z.object({
+            w: z.number(),
+            h: z.number(),
+            x: z.number(),
+            y: z.number(),
+            i: z.string(),
+            moved: z.boolean(),
+            static: z.boolean(),
+          })).optional(),
+          sm: z.array(z.object({
+            w: z.number(),
+            h: z.number(),
+            x: z.number(),
+            y: z.number(),
+            i: z.string(),
+            moved: z.boolean(),
+            static: z.boolean(),
+          })).optional(),
+          md: z.array(z.object({
+            w: z.number(),
+            h: z.number(),
+            x: z.number(),
+            y: z.number(),
+            i: z.string(),
+            moved: z.boolean(),
+            static: z.boolean(),
+          })).optional(),
+          lg: z.array(z.object({
+            w: z.number(),
+            h: z.number(),
+            x: z.number(),
+            y: z.number(),
+            i: z.string(),
+            moved: z.boolean(),
+            static: z.boolean(),
+          })).optional(),
+          xl: z.array(z.object({
+            w: z.number(),
+            h: z.number(),
+            x: z.number(),
+            y: z.number(),
+            i: z.string(),
+            moved: z.boolean(),
+            static: z.boolean(),
+          })).optional(),
+        }).describe('Layouts object for the dashboard'),
+      },
+      async ({ dashboardId, layouts }) => {
+        try {
+          const updated = await this.client.updateDashboard({ dashboardId, layouts });
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(updated, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error updating dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {

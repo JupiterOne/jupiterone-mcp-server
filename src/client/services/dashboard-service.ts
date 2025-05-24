@@ -7,7 +7,11 @@ import {
   GetDashboardResponse,
 } from '../../types/jupiterone.js';
 import { GET_DASHBOARDS, GET_DASHBOARD_DETAILS } from '../graphql/queries.js';
-import { CREATE_DASHBOARD, CREATE_DASHBOARD_WIDGET } from '../graphql/mutations.js';
+import {
+  CREATE_DASHBOARD,
+  CREATE_DASHBOARD_WIDGET,
+  PATCH_DASHBOARD,
+} from '../graphql/mutations.js';
 
 export class DashboardService {
   constructor(private client: GraphQLClient) {}
@@ -71,5 +75,111 @@ export class DashboardService {
       console.error('Error creating dashboard widget:', error);
       throw error;
     }
+  }
+
+  async updateDashboard(input: {
+    dashboardId: string;
+    layouts: {
+      xs?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      sm?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      md?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      lg?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      xl?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+    };
+  }): Promise<any> {
+    return this.patchDashboard(input);
+  }
+
+  async patchDashboard(input: {
+    dashboardId: string;
+    layouts: {
+      xs?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      sm?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      md?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      lg?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+      xl?: Array<{
+        w: number;
+        h: number;
+        x: number;
+        y: number;
+        i: string;
+        moved: boolean;
+        static: boolean;
+      }>;
+    };
+  }): Promise<any> {
+    return this.client.request(PATCH_DASHBOARD, { input });
   }
 }

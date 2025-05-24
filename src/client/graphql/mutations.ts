@@ -214,3 +214,110 @@ export const CREATE_DASHBOARD_WIDGET = `
     __typename
   }
 `;
+
+export const PATCH_DASHBOARD = `
+  mutation PatchDashboard($input: PatchInsightsDashboardInput!) {
+    patchDashboard(input: $input) {
+      id
+      name
+      category
+      userId
+      supportedUseCase
+      isJ1ManagedBoard
+      published
+      publishedToUserIds
+      publishedToGroupIds
+      groupIds
+      userIds
+      scopeFilters
+      resourceGroupId
+      starred
+      _timeUpdated
+      _createdAt
+      prerequisites {
+        prerequisitesMet
+        preRequisitesGroupsFulfilled
+        preRequisitesGroupsRequired
+      }
+      parameters {
+        dashboardId
+        accountId
+        id
+        label
+        name
+        options
+        valueType
+        type
+        default
+        disableCustomInput
+        requireValue
+      }
+      widgets {
+        id
+        title
+        description
+        type
+        questionId
+        noResultMessage
+        includeDeleted
+        config {
+          queries {
+            id
+            name
+            query
+          }
+          settings
+          postQueryFilters
+          disableQueryPolicyFilters
+        }
+      }
+      layouts {
+        xs {
+          static
+          moved
+          w
+          h
+          x
+          y
+          i
+        }
+        sm {
+          static
+          moved
+          w
+          h
+          x
+          y
+          i
+        }
+        md {
+          static
+          moved
+          w
+          h
+          x
+          y
+          i
+        }
+        lg {
+          static
+          moved
+          w
+          h
+          x
+          y
+          i
+        }
+        xl {
+          static
+          moved
+          w
+          h
+          x
+          y
+          i
+        }
+      }
+    }
+  }
+`;

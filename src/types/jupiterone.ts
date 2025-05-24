@@ -732,3 +732,107 @@ export interface CreateJ1qlFromNaturalLanguageResponse {
     __typename: string;
   };
 }
+
+export interface InsightsDashboard {
+  id: string;
+  name: string;
+  type?: string;
+  category?: string;
+  userId?: string;
+  supportedUseCase?: string;
+  isJ1ManagedBoard?: boolean;
+  published?: boolean;
+  publishedToUserIds?: string[];
+  publishedToGroupIds?: string[];
+  groupIds?: string[];
+  userIds?: string[];
+  scopeFilters?: any;
+  resourceGroupId?: string;
+  starred?: boolean;
+  _timeUpdated?: string;
+  _createdAt?: string;
+  prerequisites?: {
+    prerequisitesMet?: boolean;
+    preRequisitesGroupsFulfilled?: boolean;
+    preRequisitesGroupsRequired?: boolean;
+  };
+  parameters?: Array<{
+    dashboardId: string;
+    accountId: string;
+    id: string;
+    label: string;
+    name: string;
+    options: any;
+    valueType: string;
+    type: string;
+    default?: any;
+    disableCustomInput?: boolean;
+    requireValue?: boolean;
+  }>;
+  widgets?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    type: string;
+    questionId?: string;
+    noResultMessage?: string;
+    includeDeleted?: boolean;
+    config?: {
+      queries?: Array<{
+        id: string;
+        name: string;
+        query: string;
+      }>;
+      settings?: any;
+      postQueryFilters?: any;
+      disableQueryPolicyFilters?: boolean;
+    };
+  }>;
+  layouts?: {
+    xs?: Array<{
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      i: string;
+      moved: boolean;
+      static: boolean;
+    }>;
+    sm?: Array<{
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      i: string;
+      moved: boolean;
+      static: boolean;
+    }>;
+    md?: Array<{
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      i: string;
+      moved: boolean;
+      static: boolean;
+    }>;
+    lg?: Array<{
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      i: string;
+      moved: boolean;
+      static: boolean;
+    }>;
+    xl?: Array<{
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      i: string;
+      moved: boolean;
+      static: boolean;
+    }>;
+  };
+}
