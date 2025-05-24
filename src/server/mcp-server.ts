@@ -11,6 +11,7 @@ import {
   ActionEvaluation,
   ActionEvaluationDetails,
 } from '../types/jupiterone.js';
+import { loadDescription } from '../utils/load-description.js';
 
 export class JupiterOneMcpServer {
   private server: McpServer;
@@ -755,60 +756,7 @@ export class JupiterOneMcpServer {
     // Tool: Create inline question rule instance
     this.server.tool(
       'create-inline-question-rule',
-      `JupiterOne Rule Creation Tool - Enhanced Description
-Purpose: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
-Key Requirements for Success:
-1. Condition Format (Critical)
-The condition parameter must use JupiterOne's specific array format:
-
-Structure: ["LOGICAL_OPERATOR", [left_value, operator, right_value]]
-Example: ["AND", ["queries.queryName.total", ">", 0]]
-Supported operators: >, <, >=, <=, =, !=
-Logical operators: "AND", "OR"
-
-2. Operations Structure
-The when clause should only contain:
-
-type: Always "FILTER"
-condition: The array format described above
-Do NOT include: version, specVersion (these belong at the rule level, not in the when clause)
-
-3. Query Naming Convention
-
-Query names in the queries array must match the references in conditions
-Example: If query name is "users", reference it as "queries.users.total"
-
-4. New Entity Detection
-
-Use triggerActionsOnNewEntitiesOnly: true to only alert on genuinely new entities
-This prevents re-alerting on existing entities every polling cycle
-Essential for "new user" or "new resource" type alerts
-
-5. Common Patterns
-New Entity Monitoring:
-json{
-  "condition": ["AND", ["queries.entityQuery.total", ">", 0]],
-  "triggerActionsOnNewEntitiesOnly": true
-}
-Threshold-based Alerts:
-json{
-  "condition": ["AND", ["queries.entityQuery.total", ">=", 5]]
-}
-6. Debugging Tips
-
-If you get "Invalid conjunction operator" errors, check the condition array format
-If you get "additional properties" errors, remove extra fields from the when clause
-Always reference existing rules with get-rule-details to see working examples
-Test with simple conditions first, then add complexity
-
-7. Best Practices
-
-Use descriptive query names that match their purpose
-Include relevant entity fields in outputs for alert context
-Set appropriate polling intervals (30 minutes to 1 day typically)
-Add meaningful tags for rule organization
-Use notifyOnFailure: true to catch rule execution issues
-      `,
+      loadDescription('create-inline-question-rule.md'),
       {
         name: z.string().describe('Name of the rule'),
         description: z.string().describe('Description of the rule'),
