@@ -115,3 +115,51 @@ JUPITERONE_API_KEY="your-api-key" JUPITERONE_ACCOUNT_ID="your-account-id" npx @m
 ```
 
 The inspector will start and display a URL where you can access the testing interface.
+
+## Tools
+
+### J1QL Query Tools
+
+#### Natural Language to J1QL Converter
+Converts natural language queries into JupiterOne Query Language (J1QL) syntax using AI-powered translation. This tool should be used as the primary method for generating J1QL queries for:
+- Creating or modifying rules
+- Building dashboard widgets
+- Answering questions about your security data
+
+Example:
+```typescript
+// Input: "Show me all GitHub repositories"
+// Output: FIND Repository with type = "github"
+```
+
+#### J1QL Query Executor
+Executes J1QL queries against your JupiterOne data and returns the results synchronously. This tool is used to:
+- Run J1QL queries directly
+- Test queries before using them in rules or widgets
+- Analyze data using J1QL
+
+Features:
+- Immediate results (synchronous execution)
+- Support for query variables
+- Pagination using cursors
+- Scope filtering
+- Optional flags for:
+  - Including deleted entities
+  - Returning row metadata
+  - Returning computed properties
+
+Example:
+```typescript
+// Execute a query
+const result = await client.queryV1({
+  query: 'FIND Repository with type = "github"',
+  flags: {
+    includeDeleted: false,
+    returnRowMetadata: true
+  }
+});
+```
+
+### Other Tools
+
+// ... existing tools documentation ...

@@ -5,6 +5,7 @@ import { RuleService } from './services/rule-service.js';
 import { DashboardService } from './services/dashboard-service.js';
 import { AccountService } from './services/account-service.js';
 import { IntegrationService } from './services/integration-service.js';
+import { J1qlService } from './services/j1ql-service.js';
 
 export class JupiterOneClient {
   private client: GraphQLClient;
@@ -13,6 +14,7 @@ export class JupiterOneClient {
   private dashboardService: DashboardService;
   private accountService: AccountService;
   private integrationService: IntegrationService;
+  private j1qlService: J1qlService;
 
   constructor(config: JupiterOneConfig) {
     this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {
@@ -28,6 +30,7 @@ export class JupiterOneClient {
     this.dashboardService = new DashboardService(this.client);
     this.accountService = new AccountService(this.client);
     this.integrationService = new IntegrationService(this.client);
+    this.j1qlService = new J1qlService(this.client);
   }
 
   // Alert methods
@@ -162,5 +165,10 @@ export class JupiterOneClient {
     size?: number
   ) {
     return this.integrationService.getIntegrationEvents(jobId, integrationInstanceId, cursor, size);
+  }
+
+  // J1QL methods
+  async createJ1qlFromNaturalLanguage(...args: Parameters<J1qlService['createJ1qlFromNaturalLanguage']>) {
+    return this.j1qlService.createJ1qlFromNaturalLanguage(...args);
   }
 }

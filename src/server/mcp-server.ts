@@ -1374,6 +1374,50 @@ export class JupiterOneMcpServer {
         }
       }
     );
+
+    // Tool: Create J1QL from natural language
+    this.server.tool(
+      'create-j1ql-from-natural-language',
+      loadDescription('create-j1ql-from-natural-language.md'),
+      {
+        naturalLanguage: z.string().describe('Natural language description of what you want to find'),
+      },
+      async ({ naturalLanguage }) => {
+        try {
+          const result = await this.client.createJ1qlFromNaturalLanguage(naturalLanguage);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    result: {
+                      uuid: result.uuid,
+                      question: result.question,
+                      query: result.query,
+                    },
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error creating J1QL from natural language: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {

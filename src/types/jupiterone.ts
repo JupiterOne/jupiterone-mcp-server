@@ -722,3 +722,13 @@ export interface RuleEvaluationDetailsInput {
 export interface RawDataDownloadUrlResponse {
   getRawDataDownloadUrl: string;
 }
+
+// J1QL Natural Language types
+export interface CreateJ1qlFromNaturalLanguageResponse {
+  createJ1qlFromNaturalLanguage: {
+    uuid: string;
+    question: string;
+    query: string;
+    __typename: string;
+  };
+}

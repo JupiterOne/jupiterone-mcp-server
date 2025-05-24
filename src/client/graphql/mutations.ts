@@ -171,3 +171,14 @@ export const CREATE_DASHBOARD = `
     }
   }
 `;
+
+export const CREATE_J1QL_FROM_NATURAL_LANGUAGE = `
+  mutation createJ1qlFromNaturalLanguage($naturalLanguage: String!) {
+    createJ1qlFromNaturalLanguage(naturalLanguage: $naturalLanguage) {
+      uuid
+      question
+      query
+      __typename
+    }
+  }
+`;
