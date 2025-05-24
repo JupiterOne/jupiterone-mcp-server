@@ -163,3 +163,9 @@ const result = await client.queryV1({
 ### Other Tools
 
 // ... existing tools documentation ...
+
+## Publishing
+
+This package is published to npm as [`@jupiterone/jupiterone-mcp`](https://www.npmjs.com/package/@jupiterone/jupiterone-mcp).
+
+Publishing is automated via GitHub Actions. On every push to the `main` branch, if the version in `package.json` is newer than the latest published version, the package will be published to npm (requires the `NPM_AUTH_TOKEN` secret to be set in repository settings).
