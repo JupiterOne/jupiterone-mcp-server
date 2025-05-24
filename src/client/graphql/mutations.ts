@@ -182,3 +182,35 @@ export const CREATE_J1QL_FROM_NATURAL_LANGUAGE = `
     }
   }
 `;
+
+export const CREATE_DASHBOARD_WIDGET = `
+  mutation CreateWidget($dashboardId: String!, $input: CreateInsightsWidgetInput!) {
+    createWidget(dashboardId: $dashboardId, input: $input) {
+      ...InsightsWidget
+      __typename
+    }
+  }
+
+  fragment InsightsWidget on InsightsWidget {
+    id
+    title
+    description
+    type
+    questionId
+    noResultMessage
+    includeDeleted
+    config {
+      queries {
+        id
+        name
+        query
+        __typename
+      }
+      settings
+      postQueryFilters
+      disableQueryPolicyFilters
+      __typename
+    }
+    __typename
+  }
+`;

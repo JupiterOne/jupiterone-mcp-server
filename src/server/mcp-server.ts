@@ -382,6 +382,7 @@ export class JupiterOneMcpServer {
     // Tool: Create dashboard
     this.server.tool(
       'create-dashboard',
+      loadDescription('create-dashboard.md'),
       {
         name: z.string(),
         type: z.string(),
@@ -1411,6 +1412,47 @@ export class JupiterOneMcpServer {
               {
                 type: 'text',
                 text: `Error creating J1QL from natural language: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Create dashboard widget
+    this.server.tool(
+      'create-dashboard-widget',
+      loadDescription('create-dashboard-widget.md'),
+      {
+        dashboardId: z.string().describe('ID of the dashboard to add the widget to'),
+        input: z.any().describe('Widget input object (CreateInsightsWidgetInput)'),
+      },
+      async ({ dashboardId, input }) => {
+        try {
+          let widgetInput = input;
+          if (typeof input === 'string') {
+            try {
+              widgetInput = JSON.parse(input);
+            } catch (e) {
+              throw new Error('Input must be a valid object or JSON string');
+            }
+          }
+          const widget = await this.client.createDashboardWidget(dashboardId, widgetInput);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(widget, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error creating dashboard widget: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,

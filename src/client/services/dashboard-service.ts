@@ -7,7 +7,7 @@ import {
   GetDashboardResponse,
 } from '../../types/jupiterone.js';
 import { GET_DASHBOARDS, GET_DASHBOARD_DETAILS } from '../graphql/queries.js';
-import { CREATE_DASHBOARD } from '../graphql/mutations.js';
+import { CREATE_DASHBOARD, CREATE_DASHBOARD_WIDGET } from '../graphql/mutations.js';
 
 export class DashboardService {
   constructor(private client: GraphQLClient) {}
@@ -53,6 +53,22 @@ export class DashboardService {
       return response.getDashboard;
     } catch (error) {
       console.error('Error getting dashboard details:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new dashboard widget
+   */
+  async createDashboardWidget(dashboardId: string, input: any): Promise<any> {
+    try {
+      const response = await this.client.request<any>(CREATE_DASHBOARD_WIDGET, {
+        dashboardId,
+        input,
+      });
+      return response.createWidget;
+    } catch (error) {
+      console.error('Error creating dashboard widget:', error);
       throw error;
     }
   }
