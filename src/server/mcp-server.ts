@@ -798,34 +798,31 @@ export class JupiterOneMcpServer {
             })
           )
           .describe('J1QL queries that define what entities to match'),
-        operations: z
-          .array(
-            z.object({
-              when: z
-                .object({
-                  type: z.literal('FILTER'),
-                  version: z.number().optional().describe('Version of the filter condition'),
-                  condition: z.array(z.any()).describe('Filter condition array'),
-                })
-                .describe('Condition that triggers the actions'),
-              actions: z
-                .array(
-                  z.object({
-                    type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
-                    targetProperty: z
-                      .string()
-                      .optional()
-                      .describe('Property to set (for SET_PROPERTY actions)'),
-                    targetValue: z
-                      .any()
-                      .optional()
-                      .describe('Value to set (for SET_PROPERTY actions)'),
-                  })
-                )
-                .describe('Actions to perform when condition is met'),
-            })
-          )
-          .describe('Operations that define when and what actions to take'),
+        operations: z.array(z.object({
+          when: z.object({
+            type: z.literal('FILTER'),
+            condition: z.array(z.any()).describe('Filter condition array'),
+          }).describe('Condition that triggers the actions'),
+          actions: z.array(z.object({
+            id: z.string().optional(),
+            type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT, SEND_EMAIL)'),
+            targetProperty: z.string().optional().describe('Property to set (for SET_PROPERTY actions)'),
+            targetValue: z.any().optional().describe('Value to set (for SET_PROPERTY actions)'),
+            integrationInstanceId: z.string().optional().describe('ID of the integration instance for integration actions'),
+            recipients: z.array(z.string()).optional().describe('Email recipients for SEND_EMAIL action'),
+            body: z.string().optional().describe('Message body for email/slack actions'),
+            channels: z.array(z.string()).optional().describe('Slack channels for SEND_SLACK_MESSAGE action'),
+            bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
+            region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
+            data: z.any().optional().describe('Additional data for actions'),
+            entityClass: z.string().optional().describe('Entity class for CREATE_JIRA_TICKET action'),
+            summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
+            issueType: z.string().optional().describe('Issue type for CREATE_JIRA_TICKET action'),
+            project: z.string().optional().describe('Project key for CREATE_JIRA_TICKET action'),
+            updateContentOnChanges: z.boolean().optional().describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
+            additionalFields: z.any().optional().describe('Additional fields for CREATE_JIRA_TICKET action'),
+          })).describe('Actions to take when condition is met'),
+        })).describe('Operations to perform when conditions are met'),
       },
       async ({
         name,
@@ -898,6 +895,166 @@ export class JupiterOneMcpServer {
               {
                 type: 'text',
                 text: `Error creating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Update inline question rule instance
+    this.server.tool(
+      'update-inline-question-rule',
+      {
+        id: z.string().describe('ID of the rule to update'),
+        name: z.string().describe('Name of the rule'),
+        description: z.string().describe('Description of the rule'),
+        notifyOnFailure: z.boolean().describe('Whether to notify on failure'),
+        triggerActionsOnNewEntitiesOnly: z.boolean().describe('Whether to trigger actions only on new entities'),
+        ignorePreviousResults: z.boolean().describe('Whether to ignore previous results'),
+        pollingInterval: z.enum([
+          'DISABLED',
+          'THIRTY_MINUTES',
+          'ONE_HOUR',
+          'FOUR_HOURS',
+          'EIGHT_HOURS',
+          'TWELVE_HOURS',
+          'ONE_DAY',
+          'ONE_WEEK',
+        ]).describe('How frequently to evaluate the rule'),
+        outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
+        specVersion: z.number().describe('Specification version'),
+        version: z.number().describe('Version of the rule'),
+        tags: z.array(z.string()).describe('Tags for categorizing the rule'),
+        templates: z.record(z.any()).describe('Template variables'),
+        labels: z.array(z.object({
+          labelName: z.string(),
+          labelValue: z.string().nullable(),
+        })).describe('Labels for the rule'),
+        resourceGroupId: z.string().nullable().describe('Resource group ID'),
+        remediationSteps: z.string().nullable().describe('Steps to remediate issues found by the rule'),
+        question: z.object({
+          queries: z.array(z.object({
+            query: z.string().describe('J1QL query string'),
+            name: z.string().describe('Name identifier for the query'),
+            version: z.string().optional().describe('Version of the query'),
+            includeDeleted: z.boolean().describe('Whether to include deleted entities'),
+          })),
+        }).describe('Question configuration'),
+        operations: z.array(z.object({
+          when: z.object({
+            type: z.literal('FILTER'),
+            condition: z.array(z.any()).describe('Filter condition array'),
+          }).describe('Condition that triggers the actions'),
+          actions: z.array(z.object({
+            id: z.string().optional(),
+            type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
+            targetProperty: z.string().optional().describe('Property to set (for SET_PROPERTY actions)'),
+            targetValue: z.any().optional().describe('Value to set (for SET_PROPERTY actions)'),
+            integrationInstanceId: z.string().optional().describe('ID of the integration instance for integration actions'),
+            recipients: z.array(z.string()).optional().describe('Email recipients for SEND_EMAIL action'),
+            body: z.string().optional().describe('Message body for email/slack actions'),
+            channels: z.array(z.string()).optional().describe('Slack channels for SEND_SLACK_MESSAGE action'),
+            bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
+            region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
+            data: z.any().optional().describe('Additional data for actions'),
+            entityClass: z.string().optional().describe('Entity class for CREATE_JIRA_TICKET action'),
+            summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
+            issueType: z.string().optional().describe('Issue type for CREATE_JIRA_TICKET action'),
+            project: z.string().optional().describe('Project for CREATE_JIRA_TICKET action'),
+            updateContentOnChanges: z.boolean().optional().describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
+            additionalFields: z.any().optional().describe('Additional fields for CREATE_JIRA_TICKET action'),
+            entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
+            tags: z.array(z.object({
+              name: z.string(),
+              value: z.string().nullable(),
+            })).optional().describe('Tags for TAG_ENTITIES action'),
+          })),
+        })).describe('Operations that define when and what actions to take'),
+      },
+      async ({
+        id,
+        name,
+        description,
+        notifyOnFailure,
+        triggerActionsOnNewEntitiesOnly,
+        ignorePreviousResults,
+        pollingInterval,
+        outputs,
+        specVersion,
+        version,
+        tags,
+        templates,
+        labels,
+        resourceGroupId,
+        remediationSteps,
+        question,
+        operations,
+      }) => {
+        try {
+          const instance = {
+            id,
+            name,
+            description,
+            notifyOnFailure,
+            triggerActionsOnNewEntitiesOnly,
+            ignorePreviousResults,
+            pollingInterval,
+            outputs,
+            specVersion,
+            version,
+            tags,
+            templates,
+            labels,
+            resourceGroupId,
+            remediationSteps,
+            question,
+            operations,
+          };
+
+          const result = await this.client.updateInlineQuestionRuleInstance(instance);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    rule: {
+                      id: result.id,
+                      name: result.name,
+                      description: result.description,
+                      version: result.version,
+                      pollingInterval: result.pollingInterval,
+                      outputs: result.outputs,
+                      specVersion: result.specVersion,
+                      notifyOnFailure: result.notifyOnFailure,
+                      triggerActionsOnNewEntitiesOnly: result.triggerActionsOnNewEntitiesOnly,
+                      ignorePreviousResults: result.ignorePreviousResults,
+                      tags: result.tags,
+                      labels: result.labels,
+                      question: result.question,
+                      operations: result.operations,
+                      latestAlertId: result.latestAlertId,
+                      latestAlertIsActive: result.latestAlertIsActive,
+                      resourceGroupId: result.resourceGroupId,
+                      remediationSteps: result.remediationSteps,
+                    },
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error updating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,
