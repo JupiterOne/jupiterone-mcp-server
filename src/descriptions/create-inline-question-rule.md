@@ -20,6 +20,7 @@ The `when` clause should only contain:
 ### 3. Query Naming Convention
 - Query names in the `queries` array must match the references in conditions
 - Example: If query name is `"users"`, reference it as `"queries.users.total"`
+- **IMPORTANT**: Use `"query0"` as the standard query name for compatibility with existing patterns
 
 ### 4. New Entity Detection
 - Use `triggerActionsOnNewEntitiesOnly: true` to only alert on genuinely new entities
@@ -30,6 +31,51 @@ The `when` clause should only contain:
 - **Default**: Use `"ONE_DAY"` unless the user specifically requests a different interval
 - **Available options**: `"DISABLED"`, `"THIRTY_MINUTES"`, `"ONE_HOUR"`, `"FOUR_HOURS"`, `"EIGHT_HOURS"`, `"TWELVE_HOURS"`, `"ONE_DAY"`, `"ONE_WEEK"`
 - Only use more frequent intervals (like `"THIRTY_MINUTES"`) when explicitly requested or for time-sensitive security alerts
+
+## Required Schema Fields
+
+### Complete Required Parameters for create-inline-question-rule
+**CRITICAL**: All of these fields must be included for successful rule creation:
+
+```json
+{
+  "name": "Rule Name",
+  "description": "Rule description",
+  "notifyOnFailure": true,
+  "triggerActionsOnNewEntitiesOnly": true,
+  "ignorePreviousResults": false,
+  "pollingInterval": "ONE_DAY",
+  "specVersion": 1,
+  "templates": {},
+  "outputs": ["alertLevel"],
+  "tags": [],
+  "queries": [
+    {
+      "query": "FIND Entity...",
+      "name": "query0",
+      "version": "v1",
+      "includeDeleted": false
+    }
+  ],
+  "operations": [
+    {
+      "when": {
+        "type": "FILTER",
+        "condition": ["AND", ["queries.query0.total", ">", 0]]
+      },
+      "actions": [...]
+    }
+  ]
+}
+```
+
+**Key Schema Requirements**:
+- `ignorePreviousResults`: Must be included (typically `false`)
+- `templates`: Must be included (use `{}` if empty)
+- `tags`: Must be included (use `[]` if empty)
+- Query `name`: Use `"query0"` for primary query
+- Query `version`: Include `"v1"` for compatibility
+- Query `includeDeleted`: Must be explicitly set to `false`
 
 ## Available Action Types
 
@@ -209,12 +255,63 @@ For actions requiring integrations, you may need to:
 - `SEND_TO_S3` (AWS S3 integration)
 - `CREATE_JIRA_TICKET` (Jira integration)
 
+## Working Example Template
+
+### Complete Working Rule Structure
+Based on confirmed working examples, use this template:
+
+```json
+{
+  "name": "Your Rule Name",
+  "description": "Your rule description",
+  "notifyOnFailure": true,
+  "triggerActionsOnNewEntitiesOnly": true,
+  "ignorePreviousResults": false,
+  "pollingInterval": "ONE_DAY",
+  "specVersion": 1,
+  "templates": {},
+  "outputs": ["alertLevel"],
+  "tags": [],
+  "queries": [
+    {
+      "query": "FIND Entity WITH condition",
+      "name": "query0",
+      "version": "v1",
+      "includeDeleted": false
+    }
+  ],
+  "operations": [
+    {
+      "when": {
+        "type": "FILTER",
+        "condition": ["AND", ["queries.query0.total", ">", 0]]
+      },
+      "actions": [
+        {
+          "type": "SET_PROPERTY",
+          "targetProperty": "alertLevel",
+          "targetValue": "CRITICAL"
+        },
+        {
+          "type": "CREATE_ALERT"
+        },
+        {
+          "type": "SEND_EMAIL",
+          "recipients": ["user@company.com"],
+          "body": "Affected Items: <br><br>* {{queries.query0.data|mapProperty('displayName')|join('<br>* ')}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Common Patterns
 
 ### New Entity Monitoring
 ```json
 {
-  "condition": ["AND", ["queries.entityQuery.total", ">", 0]],
+  "condition": ["AND", ["queries.query0.total", ">", 0]],
   "triggerActionsOnNewEntitiesOnly": true
 }
 ```
@@ -222,7 +319,7 @@ For actions requiring integrations, you may need to:
 ### Threshold-based Alerts
 ```json
 {
-  "condition": ["AND", ["queries.entityQuery.total", ">=", 5]]
+  "condition": ["AND", ["queries.query0.total", ">=", 5]]
 }
 ```
 
@@ -239,16 +336,20 @@ For actions requiring integrations, you may need to:
 ## Debugging Tips
 - If you get "Invalid conjunction operator" errors, check the condition array format
 - If you get "additional properties" errors, remove extra fields from the `when` clause
+- If you get missing property errors, ensure all required schema fields are included
+- **Always include**: `ignorePreviousResults`, `templates`, `tags`, query `version` and `includeDeleted`
 - Always reference existing rules with `get-rule-details` to see working examples
 - Test with simple conditions first, then add complexity
+- Use `"query0"` as the standard query name for compatibility
 
 ## Best Practices
-- Use descriptive query names that match their purpose
+- Use descriptive query names that match their purpose (but prefer `"query0"` for main query)
 - Include relevant entity fields in `outputs` for alert context
 - Set appropriate polling intervals (default to `"ONE_DAY"` unless specified)
 - Add meaningful tags for rule organization
 - Use `notifyOnFailure: true` to catch rule execution issues
 - Always include `CREATE_ALERT` action as a baseline
+- Always include all required schema fields from the working template
 - Ask users for specific details when configuring notification actions (emails, channels, etc.)
 
 This format ensures reliable rule creation and helps avoid common pitfalls encountered during rule development.

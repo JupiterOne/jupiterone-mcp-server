@@ -76,18 +76,8 @@ export const UPDATE_INLINE_QUESTION_RULE = `
         }
       }
       operations {
-        when {
-          type
-          version
-          condition
-        }
-        actions {
-          type
-          ... on SetPropertyAction {
-            targetProperty
-            targetValue
-          }
-        }
+        when
+        actions
       }
       outputs
     }
