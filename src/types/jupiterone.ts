@@ -380,3 +380,230 @@ export interface DashboardDetails extends Dashboard {
 export interface GetDashboardResponse {
   getDashboard: DashboardDetails;
 }
+
+export interface IntegrationDefinition {
+  id: string;
+  name: string;
+  type: string;
+  title: string;
+  displayMode: string;
+  oAuth?: {
+    oAuthUrlGeneratorPath: string;
+  };
+  offsiteUrl?: string;
+  offsiteButtonTitle?: string;
+  offsiteStatusQuery?: string;
+  integrationType: string;
+  integrationClass: string;
+  integrationCategory: string;
+  beta: boolean;
+  docsWebLink?: string;
+  repoWebLink?: string;
+  invocationPaused: boolean;
+  managedExecutionDisabled: boolean;
+  managedCreateDisabled: boolean;
+  managedDeleteDisabled: boolean;
+  integrationPlatformFeatures?: {
+    supportsChildInstances: boolean;
+    supportsCollectors: boolean;
+    supportsIngestionSourcesConfig: boolean;
+    supportsAgentConfigurations: boolean;
+  };
+  ingestionSourcesConfig?: {
+    id: string;
+    title: string;
+    description: string;
+    defaultsToDisabled: boolean;
+    childIngestionSourcesMetadata?: {
+      id: string;
+      name: string;
+    }[];
+    cannotBeDisabled: boolean;
+  }[];
+  ingestionSourcesOverrides?: {
+    enabled: boolean;
+    ingestionSourceId: string;
+  }[];
+  totalInstanceCount: number;
+  integrationJobStatusMetrics?: {
+    count: number;
+    status: string;
+  }[];
+  icon?: string;
+  provisioningType?: string;
+  description?: string;
+  customDefinitionType?: string;
+  configFields?: ConfigField[];
+  authSections?: {
+    id: string;
+    description: string;
+    displayName: string;
+    configFields: ConfigField[];
+    verificationDisabled: boolean;
+  }[];
+  configSections?: {
+    displayName: string;
+    configFields: ConfigField[];
+  }[];
+}
+
+export interface ConfigField {
+  key: string;
+  displayName: string;
+  description?: string;
+  type: string;
+  format?: string;
+  defaultValue?: any;
+  helperText?: string;
+  inputAdornment?: string;
+  mask?: boolean;
+  optional?: boolean;
+  immutable?: boolean;
+  readonly?: boolean;
+  computed?: boolean;
+  options?: {
+    value: string;
+    description?: string;
+    label?: string;
+    webLink?: string;
+    default?: boolean;
+  }[];
+  configFields?: ConfigField[];
+}
+
+export interface IntegrationDefinitionsResponse {
+  integrationDefinitions: {
+    definitions: IntegrationDefinition[];
+    pageInfo: {
+      endCursor: string;
+    };
+  };
+}
+
+export interface IntegrationInstanceLite {
+  id: string;
+  name: string;
+  accountId: string;
+  sourceIntegrationInstanceId?: string;
+  pollingInterval?: string;
+  pollingIntervalCronExpression?: {
+    hour: number;
+    dayOfWeek: number;
+  };
+  integrationDefinitionId: string;
+  description?: string;
+  config: Record<string, any>;
+  instanceRelationship?: string;
+  resourceGroupId?: string;
+  createdOn: string;
+  createdBy: string;
+  updatedOn: string;
+  updatedBy: string;
+  mostRecentJob?: {
+    status: string;
+    hasSkippedSteps: boolean;
+    createDate: string;
+  };
+}
+
+export interface IntegrationInstancesResponse {
+  integrationInstancesV2: {
+    instances: IntegrationInstanceLite[];
+    pageInfo: {
+      endCursor: string;
+    };
+  };
+}
+
+export interface ListIntegrationInstancesSearchFilter {
+  // Add filter properties as needed
+}
+
+export type IntegrationJobStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+
+export interface IntegrationJob {
+  id: string;
+  status: IntegrationJobStatus;
+  integrationInstanceId: string;
+  createDate: string;
+  endDate?: string;
+  hasSkippedSteps: boolean;
+  integrationInstance: {
+    id: string;
+    name: string;
+  };
+  integrationDefinition: {
+    id: string;
+    title: string;
+    integrationType: string;
+  };
+}
+
+export interface IntegrationJobsResponse {
+  integrationJobs: {
+    jobs: IntegrationJob[];
+    pageInfo: {
+      endCursor: string;
+    };
+  };
+}
+
+export interface IntegrationEvent {
+  id: string;
+  name: string;
+  description: string;
+  createDate: string;
+  jobId: string;
+  level: string;
+  eventCode: string;
+}
+
+export interface IntegrationEventsResponse {
+  integrationEvents: {
+    events: IntegrationEvent[];
+    pageInfo: {
+      endCursor: string;
+      hasNextPage: boolean;
+    };
+  };
+}
+
+export interface IntegrationInstanceResponse {
+  integrationInstance: {
+    id: string;
+    name: string;
+    accountId: string;
+    sourceIntegrationInstanceId?: string;
+    pollingInterval?: string;
+    pollingIntervalCronExpression?: {
+      hour: number;
+      dayOfWeek: number;
+    };
+    integrationDefinition: {
+      name: string;
+      integrationType: string;
+    };
+    integrationDefinitionId: string;
+    description?: string;
+    config: Record<string, any>;
+    offsiteComplete?: boolean;
+    jobs: {
+      jobs: IntegrationJob[];
+    };
+    instanceRelationship?: string;
+    ingestionSourcesOverrides?: {
+      ingestionSourceId: string;
+      enabled: boolean;
+    }[];
+    collectorPoolId?: string;
+    resourceGroupId?: string;
+    createdOn: string;
+    createdBy: string;
+    updatedOn: string;
+    updatedBy: string;
+  };
+}
+
+export interface IntegrationJobResponse {
+  integrationJob: IntegrationJob;
+}

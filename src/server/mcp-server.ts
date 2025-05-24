@@ -549,6 +549,201 @@ export class JupiterOneMcpServer {
       }
     );
 
+    // Tool: Get integration definitions
+    this.server.tool(
+      'get-integration-definitions',
+      {
+        includeConfig: z.boolean().optional().describe('Whether to include configuration fields'),
+      },
+      async ({ includeConfig }) => {
+        try {
+          const definitions = await this.client.getIntegrationDefinitions(undefined, includeConfig);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: definitions.definitions.length,
+                    definitions: definitions.definitions.map((def) => ({
+                      id: def.id,
+                      name: def.name,
+                      type: def.type,
+                      title: def.title,
+                      displayMode: def.displayMode,
+                      integrationType: def.integrationType,
+                      integrationClass: def.integrationClass,
+                      integrationCategory: def.integrationCategory,
+                      beta: def.beta,
+                      docsWebLink: def.docsWebLink,
+                      repoWebLink: def.repoWebLink,
+                      invocationPaused: def.invocationPaused,
+                      managedExecutionDisabled: def.managedExecutionDisabled,
+                      managedCreateDisabled: def.managedCreateDisabled,
+                      managedDeleteDisabled: def.managedDeleteDisabled,
+                      totalInstanceCount: def.totalInstanceCount,
+                      description: def.description,
+                      provisioningType: def.provisioningType,
+                      customDefinitionType: def.customDefinitionType,
+                      integrationPlatformFeatures: def.integrationPlatformFeatures,
+                      configFields: def.configFields,
+                      authSections: def.authSections,
+                      configSections: def.configSections,
+                    })),
+                    pageInfo: definitions.pageInfo,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting integration definitions: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Get integration instances
+    this.server.tool(
+      'get-integration-instances',
+      {
+        definitionId: z.string().optional().describe('Optional ID to filter instances by definition'),
+        limit: z.number().min(1).max(1000).optional().describe('Optional limit for number of instances to return'),
+      },
+      async ({ definitionId, limit }) => {
+        try {
+          const instances = await this.client.getIntegrationInstances(definitionId, undefined, limit);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: instances.instances.length,
+                    instances: instances.instances.map((instance) => ({
+                      id: instance.id,
+                      name: instance.name,
+                      accountId: instance.accountId,
+                      sourceIntegrationInstanceId: instance.sourceIntegrationInstanceId,
+                      pollingInterval: instance.pollingInterval,
+                      pollingIntervalCronExpression: instance.pollingIntervalCronExpression,
+                      integrationDefinitionId: instance.integrationDefinitionId,
+                      description: instance.description,
+                      config: instance.config,
+                      instanceRelationship: instance.instanceRelationship,
+                      resourceGroupId: instance.resourceGroupId,
+                      createdOn: instance.createdOn,
+                      createdBy: instance.createdBy,
+                      updatedOn: instance.updatedOn,
+                      updatedBy: instance.updatedBy,
+                      mostRecentJob: instance.mostRecentJob
+                        ? {
+                            status: instance.mostRecentJob.status,
+                            hasSkippedSteps: instance.mostRecentJob.hasSkippedSteps,
+                            createDate: instance.mostRecentJob.createDate,
+                          }
+                        : null,
+                    })),
+                    pageInfo: instances.pageInfo,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting integration instances: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Get integration jobs
+    this.server.tool(
+      'get-integration-jobs',
+      {
+        status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).optional().describe('Optional status to filter jobs'),
+        integrationInstanceId: z.string().optional().describe('Optional ID to filter jobs by instance'),
+        integrationDefinitionId: z.string().optional().describe('Optional ID to filter jobs by definition'),
+        integrationInstanceIds: z.array(z.string()).optional().describe('Optional array of instance IDs to filter jobs'),
+        size: z.number().min(1).max(1000).optional().describe('Optional size limit for number of jobs to return'),
+      },
+      async ({ status, integrationInstanceId, integrationDefinitionId, integrationInstanceIds, size }) => {
+        try {
+          const jobs = await this.client.getIntegrationJobs(
+            status,
+            integrationInstanceId,
+            integrationDefinitionId,
+            integrationInstanceIds,
+            undefined,
+            size
+          );
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: jobs.jobs.length,
+                    jobs: jobs.jobs.map((job) => ({
+                      id: job.id,
+                      status: job.status,
+                      integrationInstanceId: job.integrationInstanceId,
+                      createDate: job.createDate,
+                      endDate: job.endDate,
+                      hasSkippedSteps: job.hasSkippedSteps,
+                      integrationInstance: {
+                        id: job.integrationInstance.id,
+                        name: job.integrationInstance.name,
+                      },
+                      integrationDefinition: {
+                        id: job.integrationDefinition.id,
+                        title: job.integrationDefinition.title,
+                        integrationType: job.integrationDefinition.integrationType,
+                      },
+                    })),
+                    pageInfo: jobs.pageInfo,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting integration jobs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
     // Tool: Create inline question rule instance
     this.server.tool(
       'create-inline-question-rule',
@@ -747,6 +942,108 @@ Use notifyOnFailure: true to catch rule execution issues
               {
                 type: 'text',
                 text: `Error creating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Add get-integration-job tool
+    this.server.tool(
+      'get-integration-job',
+      {
+        integrationJobId: z.string().describe('ID of the job to get'),
+        integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
+      },
+      async ({ integrationJobId, integrationInstanceId }) => {
+        try {
+          const job = await this.client.getIntegrationJob(
+            integrationJobId,
+            integrationInstanceId
+          );
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    id: job.id,
+                    status: job.status,
+                    integrationInstanceId: job.integrationInstanceId,
+                    createDate: job.createDate,
+                    endDate: job.endDate,
+                    hasSkippedSteps: job.hasSkippedSteps,
+                    integrationInstance: job.integrationInstance,
+                    integrationDefinition: job.integrationDefinition,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Add get-integration-events tool
+    this.server.tool(
+      'get-integration-events',
+      {
+        jobId: z.string().describe('ID of the job to get events for'),
+        integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
+        cursor: z.string().optional().describe('Optional cursor for pagination'),
+        size: z.number().min(1).max(1000).optional().describe('Optional size limit for number of events to return (1-1000)'),
+      },
+      async ({ jobId, integrationInstanceId, cursor, size }) => {
+        try {
+          const events = await this.client.getIntegrationEvents(
+            jobId,
+            integrationInstanceId,
+            cursor,
+            size
+          );
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    events: events.events.map(event => ({
+                      id: event.id,
+                      name: event.name,
+                      description: event.description,
+                      createDate: event.createDate,
+                      jobId: event.jobId,
+                      level: event.level,
+                      eventCode: event.eventCode,
+                    })),
+                    pageInfo: events.pageInfo,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
               },
             ],
             isError: true,

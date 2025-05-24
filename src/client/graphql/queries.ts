@@ -293,3 +293,306 @@ export const GET_DASHBOARD_DETAILS = `
     __typename
   }
 `;
+
+export const GET_INTEGRATION_DEFINITIONS = `
+  query IntegrationDefinitions($cursor: String, $includeConfig: Boolean = false) {
+    integrationDefinitions(cursor: $cursor) {
+      definitions {
+        ...IntegrationDefinitionsValues
+        __typename
+      }
+      pageInfo {
+        endCursor
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment IntegrationDefinitionsValues on IntegrationDefinition {
+    id
+    name
+    type
+    title
+    displayMode
+    oAuth {
+      oAuthUrlGeneratorPath
+      __typename
+    }
+    offsiteUrl
+    offsiteButtonTitle
+    offsiteStatusQuery
+    integrationType
+    integrationClass
+    integrationCategory
+    beta
+    docsWebLink
+    repoWebLink
+    invocationPaused
+    managedExecutionDisabled
+    managedCreateDisabled
+    managedDeleteDisabled
+    integrationPlatformFeatures {
+      supportsChildInstances
+      supportsCollectors
+      supportsIngestionSourcesConfig
+      supportsAgentConfigurations
+      __typename
+    }
+    ingestionSourcesConfig {
+      id
+      title
+      description
+      defaultsToDisabled
+      childIngestionSourcesMetadata {
+        id
+        name
+        __typename
+      }
+      cannotBeDisabled
+      __typename
+    }
+    ingestionSourcesOverrides {
+      enabled
+      ingestionSourceId
+      __typename
+    }
+    totalInstanceCount
+    integrationJobStatusMetrics {
+      count
+      status
+      __typename
+    }
+    icon
+    provisioningType
+    description
+    customDefinitionType
+    ...IntegrationDefinitionConfigFragment @include(if: $includeConfig)
+    __typename
+  }
+
+  fragment IntegrationDefinitionConfigFragment on IntegrationDefinition {
+    configFields {
+      ...ConfigFieldsRecursive
+      __typename
+    }
+    authSections {
+      id
+      description
+      displayName
+      configFields {
+        ...ConfigFieldsRecursive
+        __typename
+      }
+      verificationDisabled
+      __typename
+    }
+    configSections {
+      displayName
+      configFields {
+        ...ConfigFieldsRecursive
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment ConfigFieldsRecursive on ConfigField {
+    ...ConfigFieldValues
+    configFields {
+      ...ConfigFieldValues
+      configFields {
+        ...ConfigFieldValues
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+
+  fragment ConfigFieldValues on ConfigField {
+    key
+    displayName
+    description
+    type
+    format
+    defaultValue
+    helperText
+    inputAdornment
+    mask
+    optional
+    immutable
+    readonly
+    computed
+    options {
+      value
+      description
+      label
+      webLink
+      default
+      __typename
+    }
+    __typename
+  }
+`;
+
+export const GET_INTEGRATION_INSTANCES = `
+  query IntegrationInstances($definitionId: String, $cursor: String, $limit: Int, $filter: ListIntegrationInstancesSearchFilter) {
+    integrationInstancesV2(
+      definitionId: $definitionId
+      cursor: $cursor
+      limit: $limit
+      filter: $filter
+    ) {
+      instances {
+        ...IntegrationInstanceLiteValues
+        __typename
+      }
+      pageInfo {
+        endCursor
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment IntegrationInstanceLiteValues on IntegrationInstanceLite {
+    id
+    name
+    accountId
+    sourceIntegrationInstanceId
+    pollingInterval
+    pollingIntervalCronExpression {
+      hour
+      dayOfWeek
+      __typename
+    }
+    integrationDefinitionId
+    description
+    config
+    instanceRelationship
+    resourceGroupId
+    createdOn
+    createdBy
+    updatedOn
+    updatedBy
+    mostRecentJob {
+      status
+      hasSkippedSteps
+      createDate
+      __typename
+    }
+    __typename
+  }
+`;
+
+export const GET_INTEGRATION_JOBS = `
+  query IntegrationJobs($status: IntegrationJobStatus, $integrationInstanceId: String, $integrationDefinitionId: String, $integrationInstanceIds: [String], $cursor: String, $size: Int) {
+    integrationJobs(
+      status: $status
+      integrationInstanceId: $integrationInstanceId
+      integrationDefinitionId: $integrationDefinitionId
+      integrationInstanceIds: $integrationInstanceIds
+      cursor: $cursor
+      size: $size
+    ) {
+      jobs {
+        ...IntegrationJobValues
+        __typename
+      }
+      pageInfo {
+        endCursor
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment IntegrationJobValues on IntegrationJob {
+    id
+    status
+    integrationInstanceId
+    createDate
+    endDate
+    hasSkippedSteps
+    integrationInstance {
+      id
+      name
+      __typename
+    }
+    integrationDefinition {
+      id
+      title
+      integrationType
+      __typename
+    }
+    __typename
+  }
+`;
+
+export const GET_INTEGRATION_JOB = `
+  query IntegrationJob($integrationJobId: ID!, $integrationInstanceId: String!) {
+    integrationJob(
+      id: $integrationJobId
+      integrationInstanceId: $integrationInstanceId
+    ) {
+      ...IntegrationJobValues
+      __typename
+    }
+  }
+
+  fragment IntegrationJobValues on IntegrationJob {
+    id
+    status
+    integrationInstanceId
+    createDate
+    endDate
+    hasSkippedSteps
+    integrationInstance {
+      id
+      name
+      __typename
+    }
+    integrationDefinition {
+      id
+      title
+      integrationType
+      __typename
+    }
+    __typename
+  }
+`;
+
+export const GET_INTEGRATION_EVENTS = `
+  query ListEvents($jobId: String!, $integrationInstanceId: String!, $cursor: String, $size: Int) {
+    integrationEvents(
+      size: $size
+      cursor: $cursor
+      jobId: $jobId
+      integrationInstanceId: $integrationInstanceId
+    ) {
+      events {
+        ...IntegrationInstanceEventValues
+        __typename
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        __typename
+      }
+      __typename
+    }
+  }
+
+  fragment IntegrationInstanceEventValues on IntegrationEvent {
+    id
+    name
+    description
+    createDate
+    jobId
+    level
+    eventCode
+    __typename
+  }
+`;

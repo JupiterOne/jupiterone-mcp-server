@@ -1,0 +1,6 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+When creating a new tool using a graphql query for the mcp server, always ensure you add the tool to the mcp server file, create the relevant queries or mutations and then either create a new service to call them in or add it to an existing service when relevant.
