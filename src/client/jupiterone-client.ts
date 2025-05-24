@@ -72,6 +72,22 @@ export class JupiterOneClient {
     return this.ruleService.evaluateRuleInstance(...args);
   }
 
+  async listRuleEvaluations(...args: Parameters<RuleService['listRuleEvaluations']>) {
+    return this.ruleService.listRuleEvaluations(...args);
+  }
+
+  async getAllRuleEvaluations(...args: Parameters<RuleService['getAllRuleEvaluations']>) {
+    return this.ruleService.getAllRuleEvaluations(...args);
+  }
+
+  async getRuleEvaluationDetails(...args: Parameters<RuleService['getRuleEvaluationDetails']>) {
+    return this.ruleService.getRuleEvaluationDetails(...args);
+  }
+
+  async getRawDataDownloadUrl(...args: Parameters<RuleService['getRawDataDownloadUrl']>) {
+    return this.ruleService.getRawDataDownloadUrl(...args);
+  }
+
   // Dashboard methods
   async getDashboards() {
     return this.dashboardService.getDashboards();

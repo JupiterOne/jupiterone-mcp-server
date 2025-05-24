@@ -3,6 +3,14 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { JupiterOneClient } from '../client/jupiterone-client.js';
 import { JupiterOneConfig } from '../types/jupiterone.js';
+import {
+  RuleEvaluation,
+  QueryEvaluation,
+  QueryEvaluationDetails,
+  ConditionEvaluation,
+  ActionEvaluation,
+  ActionEvaluationDetails,
+} from '../types/jupiterone.js';
 
 export class JupiterOneMcpServer {
   private server: McpServer;
@@ -1044,6 +1052,185 @@ Use notifyOnFailure: true to catch rule execution issues
               {
                 type: 'text',
                 text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: List rule evaluations
+    this.server.tool(
+      'list-rule-evaluations',
+      {
+        ruleId: z.string(),
+        beginTimestamp: z.number().optional(),
+        endTimestamp: z.number().optional(),
+        limit: z.number().min(1).max(1000).optional(),
+        tag: z.string().optional(),
+      },
+      async ({ ruleId, beginTimestamp, endTimestamp, limit, tag }) => {
+        try {
+          const evaluations = await this.client.getAllRuleEvaluations({
+            collectionType: 'RULE_EVALUATION',
+            collectionOwnerId: ruleId,
+            beginTimestamp: beginTimestamp || 0,
+            endTimestamp: endTimestamp || Date.now(),
+            limit,
+            tag,
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: evaluations.length,
+                    evaluations: evaluations.map((evaluation: RuleEvaluation) => ({
+                      accountId: evaluation.accountId,
+                      collectionOwnerId: evaluation.collectionOwnerId,
+                      collectionOwnerVersion: evaluation.collectionOwnerVersion,
+                      collectionType: evaluation.collectionType,
+                      outputs: evaluation.outputs,
+                      rawDataDescriptors: evaluation.rawDataDescriptors,
+                      tag: evaluation.tag,
+                      timestamp: evaluation.timestamp,
+                    })),
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error listing rule evaluations: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Get rule evaluation details
+    this.server.tool(
+      'get-rule-evaluation-details',
+      {
+        ruleId: z.string(),
+        timestamp: z.number(),
+      },
+      async ({ ruleId, timestamp }) => {
+        try {
+          const details = await this.client.getRuleEvaluationDetails({
+            ruleInstanceId: ruleId,
+            timestamp,
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    accountRuleId: details.accountRuleId,
+                    startedOn: details.startedOn,
+                    question: {
+                      totalDuration: details.question.totalDuration,
+                      queries: Array.isArray(details.question.queries)
+                        ? details.question.queries.map((query: QueryEvaluation) => ({
+                            status: query.status,
+                            queryEvaluationDetails: Array.isArray(query.queryEvaluationDetails)
+                              ? query.queryEvaluationDetails.map((detail: QueryEvaluationDetails) => ({
+                                  name: detail.name,
+                                  duration: detail.duration,
+                                  status: detail.status,
+                                  error: detail.error,
+                                }))
+                              : [],
+                          }))
+                        : [],
+                    },
+                    conditions: Array.isArray(details.conditions)
+                      ? details.conditions.map((condition: ConditionEvaluation) => ({
+                          status: condition.status,
+                          condition: condition.condition,
+                        }))
+                      : [],
+                    actions: Array.isArray(details.actions)
+                      ? details.actions.map((action: ActionEvaluation) => ({
+                          status: action.status,
+                          actionEvaluationDetails: Array.isArray(action.actionEvaluationDetails)
+                            ? action.actionEvaluationDetails.map((detail: ActionEvaluationDetails) => ({
+                                actionId: detail.actionId,
+                                action: detail.action,
+                                status: detail.status,
+                                duration: detail.duration,
+                                finishedOn: detail.finishedOn,
+                                logs: detail.logs,
+                              }))
+                            : [],
+                        }))
+                      : [],
+                    ruleEvaluationOrigin: details.ruleEvaluationOrigin,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting rule evaluation details: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Get raw data download URL
+    this.server.tool(
+      'get-raw-data-download-url',
+      {
+        rawDataKey: z.string(),
+      },
+      async ({ rawDataKey }) => {
+        try {
+          const downloadUrl = await this.client.getRawDataDownloadUrl(rawDataKey);
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    rawDataKey,
+                    downloadUrl,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting raw data download URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,

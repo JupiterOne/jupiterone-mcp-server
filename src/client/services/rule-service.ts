@@ -9,9 +9,18 @@ import {
   UpdateInlineQuestionRuleInstanceInput,
   CreateReferencedQuestionRuleInstanceInput,
   UpdateReferencedQuestionRuleInstanceInput,
+  ListRuleEvaluationsResponse,
+  ListRuleEvaluationsFilters,
+  RuleEvaluation,
+  RuleEvaluationDetailsResponse,
+  RuleEvaluationDetailsInput,
+  RawDataDownloadUrlResponse,
 } from '../../types/jupiterone.js';
 import {
   LIST_RULE_INSTANCES,
+  LIST_RULE_EVALUATIONS,
+  GET_RULE_EVALUATION_DETAILS,
+  GET_RAW_DATA_DOWNLOAD_URL,
 } from '../graphql/queries.js';
 import {
   CREATE_INLINE_QUESTION_RULE,
@@ -134,5 +143,71 @@ export class RuleService {
       evaluateRuleInstance: { id: string; __typename: string };
     }>(EVALUATE_RULE, { id });
     return response.evaluateRuleInstance;
+  }
+
+  /**
+   * List rule evaluations for a specific rule instance
+   */
+  async listRuleEvaluations(
+    filters: ListRuleEvaluationsFilters
+  ): Promise<ListRuleEvaluationsResponse['listCollectionResults']> {
+    const response = await this.client.request<{
+      listCollectionResults: ListRuleEvaluationsResponse['listCollectionResults'];
+    }>(LIST_RULE_EVALUATIONS, filters);
+    return response.listCollectionResults;
+  }
+
+  /**
+   * Get all rule evaluations for a specific rule instance by paginating through all pages
+   */
+  async getAllRuleEvaluations(filters: Omit<ListRuleEvaluationsFilters, 'cursor'>): Promise<RuleEvaluation[]> {
+    const allEvaluations: RuleEvaluation[] = [];
+    let cursor: string | null = null;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+      const response = await this.listRuleEvaluations({
+        collectionType: filters.collectionType,
+        collectionOwnerId: filters.collectionOwnerId,
+        beginTimestamp: filters.beginTimestamp,
+        endTimestamp: filters.endTimestamp,
+        limit: filters.limit,
+        tag: filters.tag,
+        cursor: cursor || undefined,
+      });
+      if (!response?.results) {
+        console.error('Unexpected response structure:', response);
+        break;
+      }
+      allEvaluations.push(...response.results);
+
+      cursor = response.pageInfo.endCursor;
+      hasNextPage = response.pageInfo.hasNextPage;
+    }
+
+    return allEvaluations;
+  }
+
+  /**
+   * Get detailed information about a specific rule evaluation
+   */
+  async getRuleEvaluationDetails(
+    input: RuleEvaluationDetailsInput
+  ): Promise<RuleEvaluationDetailsResponse['ruleEvaluationDetails']> {
+    const response = await this.client.request<{
+      ruleEvaluationDetails: RuleEvaluationDetailsResponse['ruleEvaluationDetails'];
+    }>(GET_RULE_EVALUATION_DETAILS, { ruleEvaluationDetailsInput: input });
+    return response.ruleEvaluationDetails;
+  }
+
+  /**
+   * Get a download URL for raw data associated with a rule evaluation
+   */
+  async getRawDataDownloadUrl(rawDataKey: string): Promise<string> {
+    const response = await this.client.request<RawDataDownloadUrlResponse>(
+      GET_RAW_DATA_DOWNLOAD_URL,
+      { rawDataKey }
+    );
+    return response.getRawDataDownloadUrl;
   }
 }

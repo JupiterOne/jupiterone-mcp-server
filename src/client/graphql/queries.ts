@@ -596,3 +596,98 @@ export const GET_INTEGRATION_EVENTS = `
     __typename
   }
 `;
+
+export const LIST_RULE_EVALUATIONS = `
+  query listCollectionResults($collectionType: CollectionType!, $collectionOwnerId: String!, $beginTimestamp: Long!, $endTimestamp: Long!, $limit: Int, $cursor: String, $tag: String) {
+    listCollectionResults(
+      collectionType: $collectionType
+      collectionOwnerId: $collectionOwnerId
+      beginTimestamp: $beginTimestamp
+      endTimestamp: $endTimestamp
+      limit: $limit
+      cursor: $cursor
+      tag: $tag
+    ) {
+      results {
+        accountId
+        collectionOwnerId
+        collectionOwnerVersion
+        collectionType
+        outputs {
+          name
+          value
+          __typename
+        }
+        rawDataDescriptors {
+          name
+          persistedResultType
+          rawDataKey
+          recordCount
+          recordCreateCount
+          recordDeleteCount
+          recordUpdateCount
+          __typename
+        }
+        tag
+        timestamp
+        __typename
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        __typename
+      }
+      __typename
+    }
+  }
+`;
+
+export const GET_RULE_EVALUATION_DETAILS = `
+  query ruleEvaluationDetails($ruleEvaluationDetailsInput: RuleEvaluationDetailsInput!) {
+    ruleEvaluationDetails(input: $ruleEvaluationDetailsInput) {
+      accountRuleId
+      startedOn
+      question {
+        totalDuration
+        queries {
+          status
+          queryEvaluationDetails {
+            name
+            duration
+            status
+            error
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      conditions {
+        status
+        condition
+        __typename
+      }
+      actions {
+        status
+        actionEvaluationDetails {
+          actionId
+          action
+          status
+          duration
+          finishedOn
+          logs
+          __typename
+        }
+        __typename
+      }
+      ruleEvaluationOrigin
+      __typename
+    }
+  }
+`;
+
+export const GET_RAW_DATA_DOWNLOAD_URL = `
+  query getRawDataDownloadUrl($rawDataKey: String!) {
+    getRawDataDownloadUrl(rawDataKey: $rawDataKey)
+  }
+`;

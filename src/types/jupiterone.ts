@@ -607,3 +607,116 @@ export interface IntegrationInstanceResponse {
 export interface IntegrationJobResponse {
   integrationJob: IntegrationJob;
 }
+
+export interface RuleEvaluationOutput {
+  name: string;
+  value: any;
+  __typename: string;
+}
+
+export interface RuleEvaluationRawDataDescriptor {
+  name: string;
+  persistedResultType: string;
+  rawDataKey: string;
+  recordCount: number;
+  recordCreateCount: number;
+  recordDeleteCount: number;
+  recordUpdateCount: number;
+  __typename: string;
+}
+
+export interface RuleEvaluation {
+  accountId: string;
+  collectionOwnerId: string;
+  collectionOwnerVersion: string;
+  collectionType: string;
+  outputs: RuleEvaluationOutput[];
+  rawDataDescriptors: RuleEvaluationRawDataDescriptor[];
+  tag: string;
+  timestamp: number;
+  __typename: string;
+}
+
+export interface ListRuleEvaluationsResponse {
+  listCollectionResults: {
+    results: RuleEvaluation[];
+    pageInfo: PageInfo;
+    __typename: string;
+  };
+}
+
+export interface ListRuleEvaluationsFilters {
+  collectionType: 'RULE_EVALUATION';
+  collectionOwnerId: string;
+  beginTimestamp: number;
+  endTimestamp: number;
+  limit?: number;
+  cursor?: string;
+  tag?: string;
+  [key: string]: any;
+}
+
+export interface QueryEvaluationDetails {
+  name: string;
+  duration: number;
+  status: string;
+  error: string | null;
+  __typename: string;
+}
+
+export interface QueryEvaluation {
+  status: string;
+  queryEvaluationDetails: QueryEvaluationDetails[];
+  __typename: string;
+}
+
+export interface QuestionEvaluation {
+  totalDuration: number;
+  queries: QueryEvaluation[];
+  __typename: string;
+}
+
+export interface ConditionEvaluation {
+  status: string;
+  condition: string;
+  __typename: string;
+}
+
+export interface ActionEvaluationDetails {
+  actionId: string;
+  action: string;
+  status: string;
+  duration: number;
+  finishedOn: string;
+  logs: string[];
+  __typename: string;
+}
+
+export interface ActionEvaluation {
+  status: string;
+  actionEvaluationDetails: ActionEvaluationDetails[];
+  __typename: string;
+}
+
+export interface RuleEvaluationDetails {
+  accountRuleId: string;
+  startedOn: string;
+  question: QuestionEvaluation;
+  conditions: ConditionEvaluation[];
+  actions: ActionEvaluation[];
+  ruleEvaluationOrigin: string;
+  __typename: string;
+}
+
+export interface RuleEvaluationDetailsResponse {
+  ruleEvaluationDetails: RuleEvaluationDetails;
+}
+
+export interface RuleEvaluationDetailsInput {
+  ruleInstanceId: string;
+  timestamp: number;
+}
+
+export interface RawDataDownloadUrlResponse {
+  getRawDataDownloadUrl: string;
+}
