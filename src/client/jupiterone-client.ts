@@ -48,19 +48,27 @@ export class JupiterOneClient {
     return this.ruleService.getAllRuleInstances(...args);
   }
 
-  async createInlineQuestionRuleInstance(...args: Parameters<RuleService['createInlineQuestionRuleInstance']>) {
+  async createInlineQuestionRuleInstance(
+    ...args: Parameters<RuleService['createInlineQuestionRuleInstance']>
+  ) {
     return this.ruleService.createInlineQuestionRuleInstance(...args);
   }
 
-  async updateInlineQuestionRuleInstance(...args: Parameters<RuleService['updateInlineQuestionRuleInstance']>) {
+  async updateInlineQuestionRuleInstance(
+    ...args: Parameters<RuleService['updateInlineQuestionRuleInstance']>
+  ) {
     return this.ruleService.updateInlineQuestionRuleInstance(...args);
   }
 
-  async createReferencedQuestionRuleInstance(...args: Parameters<RuleService['createReferencedQuestionRuleInstance']>) {
+  async createReferencedQuestionRuleInstance(
+    ...args: Parameters<RuleService['createReferencedQuestionRuleInstance']>
+  ) {
     return this.ruleService.createReferencedQuestionRuleInstance(...args);
   }
 
-  async updateReferencedQuestionRuleInstance(...args: Parameters<RuleService['updateReferencedQuestionRuleInstance']>) {
+  async updateReferencedQuestionRuleInstance(
+    ...args: Parameters<RuleService['updateReferencedQuestionRuleInstance']>
+  ) {
     return this.ruleService.updateReferencedQuestionRuleInstance(...args);
   }
 
@@ -88,6 +96,10 @@ export class JupiterOneClient {
     return this.ruleService.getRawDataDownloadUrl(...args);
   }
 
+  async getRawDataResults(...args: Parameters<RuleService['getRawDataResults']>) {
+    return this.ruleService.getRawDataResults(...args);
+  }
+
   // Dashboard methods
   async getDashboards() {
     return this.dashboardService.getDashboards();
@@ -111,11 +123,15 @@ export class JupiterOneClient {
   }
 
   // Integration methods
-  async getIntegrationDefinitions(...args: Parameters<IntegrationService['getIntegrationDefinitions']>) {
+  async getIntegrationDefinitions(
+    ...args: Parameters<IntegrationService['getIntegrationDefinitions']>
+  ) {
     return this.integrationService.getIntegrationDefinitions(...args);
   }
 
-  async getIntegrationInstances(...args: Parameters<IntegrationService['getIntegrationInstances']>) {
+  async getIntegrationInstances(
+    ...args: Parameters<IntegrationService['getIntegrationInstances']>
+  ) {
     return this.integrationService.getIntegrationInstances(...args);
   }
 
@@ -128,14 +144,8 @@ export class JupiterOneClient {
    * @param integrationJobId ID of the job to get
    * @param integrationInstanceId ID of the instance the job belongs to
    */
-  async getIntegrationJob(
-    integrationJobId: string,
-    integrationInstanceId: string
-  ) {
-    return this.integrationService.getIntegrationJob(
-      integrationJobId,
-      integrationInstanceId
-    );
+  async getIntegrationJob(integrationJobId: string, integrationInstanceId: string) {
+    return this.integrationService.getIntegrationJob(integrationJobId, integrationInstanceId);
   }
 
   /**
@@ -151,11 +161,6 @@ export class JupiterOneClient {
     cursor?: string,
     size?: number
   ) {
-    return this.integrationService.getIntegrationEvents(
-      jobId,
-      integrationInstanceId,
-      cursor,
-      size
-    );
+    return this.integrationService.getIntegrationEvents(jobId, integrationInstanceId, cursor, size);
   }
 }

@@ -660,13 +660,14 @@ export interface QueryEvaluationDetails {
   name: string;
   duration: number;
   status: string;
-  error: string | null;
-  __typename: string;
+  error?: string;
+  rawDataKey?: string;
 }
 
 export interface QueryEvaluation {
   status: string;
   queryEvaluationDetails: QueryEvaluationDetails[];
+  rawDataDescriptors?: RuleEvaluationRawDataDescriptor[];
   __typename: string;
 }
 
@@ -705,6 +706,7 @@ export interface RuleEvaluationDetails {
   conditions: ConditionEvaluation[];
   actions: ActionEvaluation[];
   ruleEvaluationOrigin: string;
+  rawDataDescriptors?: RuleEvaluationRawDataDescriptor[];
   __typename: string;
 }
 

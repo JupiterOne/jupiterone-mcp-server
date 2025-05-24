@@ -14,7 +14,6 @@ import {
   RuleEvaluation,
   RuleEvaluationDetailsResponse,
   RuleEvaluationDetailsInput,
-  RawDataDownloadUrlResponse,
 } from '../../types/jupiterone.js';
 import {
   LIST_RULE_INSTANCES,
@@ -160,7 +159,9 @@ export class RuleService {
   /**
    * Get all rule evaluations for a specific rule instance by paginating through all pages
    */
-  async getAllRuleEvaluations(filters: Omit<ListRuleEvaluationsFilters, 'cursor'>): Promise<RuleEvaluation[]> {
+  async getAllRuleEvaluations(
+    filters: Omit<ListRuleEvaluationsFilters, 'cursor'>
+  ): Promise<RuleEvaluation[]> {
     const allEvaluations: RuleEvaluation[] = [];
     let cursor: string | null = null;
     let hasNextPage = true;
@@ -204,10 +205,19 @@ export class RuleService {
    * Get a download URL for raw data associated with a rule evaluation
    */
   async getRawDataDownloadUrl(rawDataKey: string): Promise<string> {
-    const response = await this.client.request<RawDataDownloadUrlResponse>(
+    const response = await this.client.request<{ getRawDataDownloadUrl: string }>(
       GET_RAW_DATA_DOWNLOAD_URL,
       { rawDataKey }
     );
     return response.getRawDataDownloadUrl;
+  }
+
+  async getRawDataResults(rawDataKey: string): Promise<any> {
+    const downloadUrl = await this.getRawDataDownloadUrl(rawDataKey);
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch query results: ${response.statusText}`);
+    }
+    return response.json();
   }
 }

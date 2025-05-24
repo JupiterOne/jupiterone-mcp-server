@@ -1238,6 +1238,37 @@ Use notifyOnFailure: true to catch rule execution issues
         }
       }
     );
+
+    // Tool: Get rule evaluation query results
+    this.server.tool(
+      'get-rule-evaluation-query-results',
+      {
+        rawDataKey: z.string(),
+      },
+      async ({ rawDataKey }) => {
+        try {
+          const results = await this.client.getRawDataResults(rawDataKey);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(results, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting rule evaluation query results: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
   }
 
   async start(): Promise<void> {
