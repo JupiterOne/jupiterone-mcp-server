@@ -181,4 +181,8 @@ export class JupiterOneClient {
   async createJ1qlFromNaturalLanguage(...args: Parameters<J1qlService['createJ1qlFromNaturalLanguage']>) {
     return this.j1qlService.createJ1qlFromNaturalLanguage(...args);
   }
+
+  async executeJ1qlQuery(...args: Parameters<J1qlService['executeJ1qlQuery']>) {
+    return this.j1qlService.executeJ1qlQuery(...args);
+  }
 }

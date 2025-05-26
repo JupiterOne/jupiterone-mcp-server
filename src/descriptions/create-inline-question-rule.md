@@ -2,6 +2,8 @@
 
 **Purpose**: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
 
+The first step in creating a rule is to identify the query you want to use in order to get the data you want to take action with. Use the `execute-j1ql-query` tool to find the correct query.
+
 ## Key Requirements for Success
 
 ### 1. Condition Format (Critical)

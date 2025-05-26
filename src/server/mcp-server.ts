@@ -31,6 +31,7 @@ export class JupiterOneMcpServer {
     // Tool: List all rules
     this.server.tool(
       'list-rules',
+      loadDescription('list-rules.md'),
       {
         limit: z.number().min(1).max(1000).optional(),
       },
@@ -258,6 +259,7 @@ export class JupiterOneMcpServer {
     // Tool: Get active alerts
     this.server.tool(
       'get-active-alerts',
+      loadDescription('list-alerts.md'),
       {
         limit: z.number().min(1).max(1000).optional(),
       },
@@ -627,12 +629,24 @@ export class JupiterOneMcpServer {
     this.server.tool(
       'get-integration-instances',
       {
-        definitionId: z.string().optional().describe('Optional ID to filter instances by definition'),
-        limit: z.number().min(1).max(1000).optional().describe('Optional limit for number of instances to return'),
+        definitionId: z
+          .string()
+          .optional()
+          .describe('Optional ID to filter instances by definition'),
+        limit: z
+          .number()
+          .min(1)
+          .max(1000)
+          .optional()
+          .describe('Optional limit for number of instances to return'),
       },
       async ({ definitionId, limit }) => {
         try {
-          const instances = await this.client.getIntegrationInstances(definitionId, undefined, limit);
+          const instances = await this.client.getIntegrationInstances(
+            definitionId,
+            undefined,
+            limit
+          );
 
           return {
             content: [
@@ -691,13 +705,36 @@ export class JupiterOneMcpServer {
     this.server.tool(
       'get-integration-jobs',
       {
-        status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED']).optional().describe('Optional status to filter jobs'),
-        integrationInstanceId: z.string().optional().describe('Optional ID to filter jobs by instance'),
-        integrationDefinitionId: z.string().optional().describe('Optional ID to filter jobs by definition'),
-        integrationInstanceIds: z.array(z.string()).optional().describe('Optional array of instance IDs to filter jobs'),
-        size: z.number().min(1).max(1000).optional().describe('Optional size limit for number of jobs to return'),
+        status: z
+          .enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'])
+          .optional()
+          .describe('Optional status to filter jobs'),
+        integrationInstanceId: z
+          .string()
+          .optional()
+          .describe('Optional ID to filter jobs by instance'),
+        integrationDefinitionId: z
+          .string()
+          .optional()
+          .describe('Optional ID to filter jobs by definition'),
+        integrationInstanceIds: z
+          .array(z.string())
+          .optional()
+          .describe('Optional array of instance IDs to filter jobs'),
+        size: z
+          .number()
+          .min(1)
+          .max(1000)
+          .optional()
+          .describe('Optional size limit for number of jobs to return'),
       },
-      async ({ status, integrationInstanceId, integrationDefinitionId, integrationInstanceIds, size }) => {
+      async ({
+        status,
+        integrationInstanceId,
+        integrationDefinitionId,
+        integrationInstanceIds,
+        size,
+      }) => {
         try {
           const jobs = await this.client.getIntegrationJobs(
             status,
@@ -799,31 +836,78 @@ export class JupiterOneMcpServer {
             })
           )
           .describe('J1QL queries that define what entities to match'),
-        operations: z.array(z.object({
-          when: z.object({
-            type: z.literal('FILTER'),
-            condition: z.array(z.any()).describe('Filter condition array'),
-          }).describe('Condition that triggers the actions'),
-          actions: z.array(z.object({
-            id: z.string().optional(),
-            type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT, SEND_EMAIL)'),
-            targetProperty: z.string().optional().describe('Property to set (for SET_PROPERTY actions)'),
-            targetValue: z.any().optional().describe('Value to set (for SET_PROPERTY actions)'),
-            integrationInstanceId: z.string().optional().describe('ID of the integration instance for integration actions'),
-            recipients: z.array(z.string()).optional().describe('Email recipients for SEND_EMAIL action'),
-            body: z.string().optional().describe('Message body for email/slack actions'),
-            channels: z.array(z.string()).optional().describe('Slack channels for SEND_SLACK_MESSAGE action'),
-            bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
-            region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-            data: z.any().optional().describe('Additional data for actions'),
-            entityClass: z.string().optional().describe('Entity class for CREATE_JIRA_TICKET action'),
-            summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
-            issueType: z.string().optional().describe('Issue type for CREATE_JIRA_TICKET action'),
-            project: z.string().optional().describe('Project key for CREATE_JIRA_TICKET action'),
-            updateContentOnChanges: z.boolean().optional().describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
-            additionalFields: z.any().optional().describe('Additional fields for CREATE_JIRA_TICKET action'),
-          })).describe('Actions to take when condition is met'),
-        })).describe('Operations to perform when conditions are met'),
+        operations: z
+          .array(
+            z.object({
+              when: z
+                .object({
+                  type: z.literal('FILTER'),
+                  condition: z.array(z.any()).describe('Filter condition array'),
+                })
+                .describe('Condition that triggers the actions'),
+              actions: z
+                .array(
+                  z.object({
+                    id: z.string().optional(),
+                    type: z
+                      .string()
+                      .describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT, SEND_EMAIL)'),
+                    targetProperty: z
+                      .string()
+                      .optional()
+                      .describe('Property to set (for SET_PROPERTY actions)'),
+                    targetValue: z
+                      .any()
+                      .optional()
+                      .describe('Value to set (for SET_PROPERTY actions)'),
+                    integrationInstanceId: z
+                      .string()
+                      .optional()
+                      .describe('ID of the integration instance for integration actions'),
+                    recipients: z
+                      .array(z.string())
+                      .optional()
+                      .describe('Email recipients for SEND_EMAIL action'),
+                    body: z.string().optional().describe('Message body for email/slack actions'),
+                    channels: z
+                      .array(z.string())
+                      .optional()
+                      .describe('Slack channels for SEND_SLACK_MESSAGE action'),
+                    bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
+                    region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
+                    data: z.any().optional().describe('Additional data for actions'),
+                    entityClass: z
+                      .string()
+                      .optional()
+                      .describe('Entity class for CREATE_JIRA_TICKET action'),
+                    summary: z
+                      .string()
+                      .optional()
+                      .describe('Summary for CREATE_JIRA_TICKET action'),
+                    issueType: z
+                      .string()
+                      .optional()
+                      .describe('Issue type for CREATE_JIRA_TICKET action'),
+                    project: z
+                      .string()
+                      .optional()
+                      .describe('Project key for CREATE_JIRA_TICKET action'),
+                    updateContentOnChanges: z
+                      .boolean()
+                      .optional()
+                      .describe(
+                        'Whether to update content on changes for CREATE_JIRA_TICKET action'
+                      ),
+                    additionalFields: z
+                      .any()
+                      .optional()
+                      .describe('Additional fields for CREATE_JIRA_TICKET action'),
+                  })
+                )
+                .describe('Actions to take when condition is met'),
+            })
+          )
+          .describe('Operations to perform when conditions are met'),
       },
       async ({
         name,
@@ -912,67 +996,122 @@ export class JupiterOneMcpServer {
         name: z.string().describe('Name of the rule'),
         description: z.string().describe('Description of the rule'),
         notifyOnFailure: z.boolean().describe('Whether to notify on failure'),
-        triggerActionsOnNewEntitiesOnly: z.boolean().describe('Whether to trigger actions only on new entities'),
+        triggerActionsOnNewEntitiesOnly: z
+          .boolean()
+          .describe('Whether to trigger actions only on new entities'),
         ignorePreviousResults: z.boolean().describe('Whether to ignore previous results'),
-        pollingInterval: z.enum([
-          'DISABLED',
-          'THIRTY_MINUTES',
-          'ONE_HOUR',
-          'FOUR_HOURS',
-          'EIGHT_HOURS',
-          'TWELVE_HOURS',
-          'ONE_DAY',
-          'ONE_WEEK',
-        ]).describe('How frequently to evaluate the rule'),
+        pollingInterval: z
+          .enum([
+            'DISABLED',
+            'THIRTY_MINUTES',
+            'ONE_HOUR',
+            'FOUR_HOURS',
+            'EIGHT_HOURS',
+            'TWELVE_HOURS',
+            'ONE_DAY',
+            'ONE_WEEK',
+          ])
+          .describe('How frequently to evaluate the rule'),
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
         specVersion: z.number().describe('Specification version'),
         version: z.number().describe('Version of the rule'),
         tags: z.array(z.string()).describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).describe('Template variables'),
-        labels: z.array(z.object({
-          labelName: z.string(),
-          labelValue: z.string().nullable(),
-        })).describe('Labels for the rule'),
+        labels: z
+          .array(
+            z.object({
+              labelName: z.string(),
+              labelValue: z.string().nullable(),
+            })
+          )
+          .describe('Labels for the rule'),
         resourceGroupId: z.string().nullable().describe('Resource group ID'),
-        remediationSteps: z.string().nullable().describe('Steps to remediate issues found by the rule'),
-        question: z.object({
-          queries: z.array(z.object({
-            query: z.string().describe('J1QL query string'),
-            name: z.string().describe('Name identifier for the query'),
-            version: z.string().optional().describe('Version of the query'),
-            includeDeleted: z.boolean().describe('Whether to include deleted entities'),
-          })),
-        }).describe('Question configuration'),
-        operations: z.array(z.object({
-          when: z.object({
-            type: z.literal('FILTER'),
-            condition: z.array(z.any()).describe('Filter condition array'),
-          }).describe('Condition that triggers the actions'),
-          actions: z.array(z.object({
-            id: z.string().optional(),
-            type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
-            targetProperty: z.string().optional().describe('Property to set (for SET_PROPERTY actions)'),
-            targetValue: z.any().optional().describe('Value to set (for SET_PROPERTY actions)'),
-            integrationInstanceId: z.string().optional().describe('ID of the integration instance for integration actions'),
-            recipients: z.array(z.string()).optional().describe('Email recipients for SEND_EMAIL action'),
-            body: z.string().optional().describe('Message body for email/slack actions'),
-            channels: z.array(z.string()).optional().describe('Slack channels for SEND_SLACK_MESSAGE action'),
-            bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
-            region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-            data: z.any().optional().describe('Additional data for actions'),
-            entityClass: z.string().optional().describe('Entity class for CREATE_JIRA_TICKET action'),
-            summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
-            issueType: z.string().optional().describe('Issue type for CREATE_JIRA_TICKET action'),
-            project: z.string().optional().describe('Project for CREATE_JIRA_TICKET action'),
-            updateContentOnChanges: z.boolean().optional().describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
-            additionalFields: z.any().optional().describe('Additional fields for CREATE_JIRA_TICKET action'),
-            entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
-            tags: z.array(z.object({
-              name: z.string(),
-              value: z.string().nullable(),
-            })).optional().describe('Tags for TAG_ENTITIES action'),
-          })),
-        })).describe('Operations that define when and what actions to take'),
+        remediationSteps: z
+          .string()
+          .nullable()
+          .describe('Steps to remediate issues found by the rule'),
+        question: z
+          .object({
+            queries: z.array(
+              z.object({
+                query: z.string().describe('J1QL query string'),
+                name: z.string().describe('Name identifier for the query'),
+                version: z.string().optional().describe('Version of the query'),
+                includeDeleted: z.boolean().describe('Whether to include deleted entities'),
+              })
+            ),
+          })
+          .describe('Question configuration'),
+        operations: z
+          .array(
+            z.object({
+              when: z
+                .object({
+                  type: z.literal('FILTER'),
+                  condition: z.array(z.any()).describe('Filter condition array'),
+                })
+                .describe('Condition that triggers the actions'),
+              actions: z.array(
+                z.object({
+                  id: z.string().optional(),
+                  type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
+                  targetProperty: z
+                    .string()
+                    .optional()
+                    .describe('Property to set (for SET_PROPERTY actions)'),
+                  targetValue: z
+                    .any()
+                    .optional()
+                    .describe('Value to set (for SET_PROPERTY actions)'),
+                  integrationInstanceId: z
+                    .string()
+                    .optional()
+                    .describe('ID of the integration instance for integration actions'),
+                  recipients: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Email recipients for SEND_EMAIL action'),
+                  body: z.string().optional().describe('Message body for email/slack actions'),
+                  channels: z
+                    .array(z.string())
+                    .optional()
+                    .describe('Slack channels for SEND_SLACK_MESSAGE action'),
+                  bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
+                  region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
+                  data: z.any().optional().describe('Additional data for actions'),
+                  entityClass: z
+                    .string()
+                    .optional()
+                    .describe('Entity class for CREATE_JIRA_TICKET action'),
+                  summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
+                  issueType: z
+                    .string()
+                    .optional()
+                    .describe('Issue type for CREATE_JIRA_TICKET action'),
+                  project: z.string().optional().describe('Project for CREATE_JIRA_TICKET action'),
+                  updateContentOnChanges: z
+                    .boolean()
+                    .optional()
+                    .describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
+                  additionalFields: z
+                    .any()
+                    .optional()
+                    .describe('Additional fields for CREATE_JIRA_TICKET action'),
+                  entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
+                  tags: z
+                    .array(
+                      z.object({
+                        name: z.string(),
+                        value: z.string().nullable(),
+                      })
+                    )
+                    .optional()
+                    .describe('Tags for TAG_ENTITIES action'),
+                })
+              ),
+            })
+          )
+          .describe('Operations that define when and what actions to take'),
       },
       async ({
         id,
@@ -1073,10 +1212,7 @@ export class JupiterOneMcpServer {
       },
       async ({ integrationJobId, integrationInstanceId }) => {
         try {
-          const job = await this.client.getIntegrationJob(
-            integrationJobId,
-            integrationInstanceId
-          );
+          const job = await this.client.getIntegrationJob(integrationJobId, integrationInstanceId);
           return {
             content: [
               {
@@ -1119,7 +1255,12 @@ export class JupiterOneMcpServer {
         jobId: z.string().describe('ID of the job to get events for'),
         integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
         cursor: z.string().optional().describe('Optional cursor for pagination'),
-        size: z.number().min(1).max(1000).optional().describe('Optional size limit for number of events to return (1-1000)'),
+        size: z
+          .number()
+          .min(1)
+          .max(1000)
+          .optional()
+          .describe('Optional size limit for number of events to return (1-1000)'),
       },
       async ({ jobId, integrationInstanceId, cursor, size }) => {
         try {
@@ -1135,7 +1276,7 @@ export class JupiterOneMcpServer {
                 type: 'text',
                 text: JSON.stringify(
                   {
-                    events: events.events.map(event => ({
+                    events: events.events.map((event) => ({
                       id: event.id,
                       name: event.name,
                       description: event.description,
@@ -1253,12 +1394,14 @@ export class JupiterOneMcpServer {
                         ? details.question.queries.map((query: QueryEvaluation) => ({
                             status: query.status,
                             queryEvaluationDetails: Array.isArray(query.queryEvaluationDetails)
-                              ? query.queryEvaluationDetails.map((detail: QueryEvaluationDetails) => ({
-                                  name: detail.name,
-                                  duration: detail.duration,
-                                  status: detail.status,
-                                  error: detail.error,
-                                }))
+                              ? query.queryEvaluationDetails.map(
+                                  (detail: QueryEvaluationDetails) => ({
+                                    name: detail.name,
+                                    duration: detail.duration,
+                                    status: detail.status,
+                                    error: detail.error,
+                                  })
+                                )
                               : [],
                           }))
                         : [],
@@ -1273,14 +1416,16 @@ export class JupiterOneMcpServer {
                       ? details.actions.map((action: ActionEvaluation) => ({
                           status: action.status,
                           actionEvaluationDetails: Array.isArray(action.actionEvaluationDetails)
-                            ? action.actionEvaluationDetails.map((detail: ActionEvaluationDetails) => ({
-                                actionId: detail.actionId,
-                                action: detail.action,
-                                status: detail.status,
-                                duration: detail.duration,
-                                finishedOn: detail.finishedOn,
-                                logs: detail.logs,
-                              }))
+                            ? action.actionEvaluationDetails.map(
+                                (detail: ActionEvaluationDetails) => ({
+                                  actionId: detail.actionId,
+                                  action: detail.action,
+                                  status: detail.status,
+                                  duration: detail.duration,
+                                  finishedOn: detail.finishedOn,
+                                  logs: detail.logs,
+                                })
+                              )
                             : [],
                         }))
                       : [],
@@ -1376,49 +1521,50 @@ export class JupiterOneMcpServer {
       }
     );
 
+    // The server is not doing a great job of this, will uncomment when we have better support for this
     // Tool: Create J1QL from natural language
-    this.server.tool(
-      'create-j1ql-from-natural-language',
-      loadDescription('create-j1ql-from-natural-language.md'),
-      {
-        naturalLanguage: z.string().describe('Natural language description of what you want to find'),
-      },
-      async ({ naturalLanguage }) => {
-        try {
-          const result = await this.client.createJ1qlFromNaturalLanguage(naturalLanguage);
+    // this.server.tool(
+    //   'create-j1ql-from-natural-language',
+    //   loadDescription('create-j1ql-from-natural-language.md'),
+    //   {
+    //     naturalLanguage: z.string().describe('Natural language description of what you want to find'),
+    //   },
+    //   async ({ naturalLanguage }) => {
+    //     try {
+    //       const result = await this.client.createJ1qlFromNaturalLanguage(naturalLanguage);
 
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify(
-                  {
-                    success: true,
-                    result: {
-                      uuid: result.uuid,
-                      question: result.question,
-                      query: result.query,
-                    },
-                  },
-                  null,
-                  2
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Error creating J1QL from natural language: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-      }
-    );
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: JSON.stringify(
+    //               {
+    //                 success: true,
+    //                 result: {
+    //                   uuid: result.uuid,
+    //                   question: result.question,
+    //                   query: result.query,
+    //                 },
+    //               },
+    //               null,
+    //               2
+    //             ),
+    //           },
+    //         ],
+    //       };
+    //     } catch (error) {
+    //       return {
+    //         content: [
+    //           {
+    //             type: 'text',
+    //             text: `Error creating J1QL from natural language: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    //           },
+    //         ],
+    //         isError: true,
+    //       };
+    //     }
+    //   }
+    // );
 
     // Tool: Create dashboard widget
     this.server.tool(
@@ -1467,53 +1613,75 @@ export class JupiterOneMcpServer {
       loadDescription('update-dashboard.md'),
       {
         dashboardId: z.string().describe('ID of the dashboard to update'),
-        layouts: z.object({
-          xs: z.array(z.object({
-            w: z.number(),
-            h: z.number(),
-            x: z.number(),
-            y: z.number(),
-            i: z.string(),
-            moved: z.boolean(),
-            static: z.boolean(),
-          })).optional(),
-          sm: z.array(z.object({
-            w: z.number(),
-            h: z.number(),
-            x: z.number(),
-            y: z.number(),
-            i: z.string(),
-            moved: z.boolean(),
-            static: z.boolean(),
-          })).optional(),
-          md: z.array(z.object({
-            w: z.number(),
-            h: z.number(),
-            x: z.number(),
-            y: z.number(),
-            i: z.string(),
-            moved: z.boolean(),
-            static: z.boolean(),
-          })).optional(),
-          lg: z.array(z.object({
-            w: z.number(),
-            h: z.number(),
-            x: z.number(),
-            y: z.number(),
-            i: z.string(),
-            moved: z.boolean(),
-            static: z.boolean(),
-          })).optional(),
-          xl: z.array(z.object({
-            w: z.number(),
-            h: z.number(),
-            x: z.number(),
-            y: z.number(),
-            i: z.string(),
-            moved: z.boolean(),
-            static: z.boolean(),
-          })).optional(),
-        }).describe('Layouts object for the dashboard'),
+        layouts: z
+          .object({
+            xs: z
+              .array(
+                z.object({
+                  w: z.number(),
+                  h: z.number(),
+                  x: z.number(),
+                  y: z.number(),
+                  i: z.string(),
+                  moved: z.boolean(),
+                  static: z.boolean(),
+                })
+              )
+              .optional(),
+            sm: z
+              .array(
+                z.object({
+                  w: z.number(),
+                  h: z.number(),
+                  x: z.number(),
+                  y: z.number(),
+                  i: z.string(),
+                  moved: z.boolean(),
+                  static: z.boolean(),
+                })
+              )
+              .optional(),
+            md: z
+              .array(
+                z.object({
+                  w: z.number(),
+                  h: z.number(),
+                  x: z.number(),
+                  y: z.number(),
+                  i: z.string(),
+                  moved: z.boolean(),
+                  static: z.boolean(),
+                })
+              )
+              .optional(),
+            lg: z
+              .array(
+                z.object({
+                  w: z.number(),
+                  h: z.number(),
+                  x: z.number(),
+                  y: z.number(),
+                  i: z.string(),
+                  moved: z.boolean(),
+                  static: z.boolean(),
+                })
+              )
+              .optional(),
+            xl: z
+              .array(
+                z.object({
+                  w: z.number(),
+                  h: z.number(),
+                  x: z.number(),
+                  y: z.number(),
+                  i: z.string(),
+                  moved: z.boolean(),
+                  static: z.boolean(),
+                })
+              )
+              .optional(),
+          })
+          .describe('Layouts object for the dashboard'),
       },
       async ({ dashboardId, layouts }) => {
         try {
@@ -1532,6 +1700,79 @@ export class JupiterOneMcpServer {
               {
                 type: 'text',
                 text: `Error updating dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+    );
+
+    // Tool: Execute J1QL query
+    this.server.tool(
+      'execute-j1ql-query',
+      loadDescription('execute-j1ql-query.md'),
+      {
+        query: z.string().describe('A J1QL query string that describes what data to return'),
+        variables: z
+          .record(z.any())
+          .optional()
+          .describe('A JSON map of values to be used as parameters for the query'),
+        cursor: z
+          .string()
+          .optional()
+          .describe('A token that can be exchanged to fetch the next page of information'),
+        includeDeleted: z
+          .boolean()
+          .optional()
+          .describe('Include recently deleted information in the results'),
+        deferredResponse: z
+          .enum(['DISABLED', 'FORCE'])
+          .optional()
+          .describe('Allows for a deferred response to be returned'),
+        flags: z.record(z.any()).optional().describe('Flags for query execution'),
+        scopeFilters: z
+          .array(z.record(z.any()))
+          .optional()
+          .describe('Array of filters that define the desired vertex'),
+      },
+      async ({
+        query,
+        variables,
+        cursor,
+        includeDeleted,
+        deferredResponse,
+        flags,
+        scopeFilters,
+      }) => {
+        try {
+          // Build flags object
+          const queryFlags = { ...flags };
+          if (typeof includeDeleted === 'boolean') queryFlags.includeDeleted = includeDeleted;
+          if (deferredResponse) queryFlags.deferredResponse = deferredResponse;
+
+          const result = await this.client.executeJ1qlQuery({
+            query,
+            variables,
+            cursor,
+            scopeFilters,
+            flags: Object.keys(queryFlags).length > 0 ? queryFlags : undefined,
+          });
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(result, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error executing J1QL query: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,

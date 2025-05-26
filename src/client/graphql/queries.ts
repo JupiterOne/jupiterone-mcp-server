@@ -691,3 +691,14 @@ export const GET_RAW_DATA_DOWNLOAD_URL = `
     getRawDataDownloadUrl(rawDataKey: $rawDataKey)
   }
 `;
+
+// J1QL Query Executor
+export const QUERY_V1 = `
+  query J1QL($query: String!, $variables: JSON, $cursor: String, $scopeFilters: [JSON!], $flags: QueryV1Flags) {
+    queryV1(query: $query, variables: $variables, cursor: $cursor, scopeFilters: $scopeFilters, flags: $flags) {
+      type
+      data
+      cursor
+    }
+  }
+`;

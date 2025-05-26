@@ -38,21 +38,52 @@ A Model Context Protocol (MCP) server that provides access to JupiterOne account
 
 ## Available Tools
 
+### Rules Management
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `list-rules` | List all rules in the account | `limit` (optional): Number of rules to return (1-1000) |
 | `get-rule-details` | Get detailed rule information | `ruleId`: ID of the rule |
-| `create-inline-question-rule` | Create new inline question rule | Complex object with name, description, queries, operations, etc. |
-| `update-inline-question-rule` | Update existing rule | Rule ID and updated configuration |
+| `create-inline-question-rule` | Create new inline question rule | Complex object: `name`, `description`, `notifyOnFailure` (optional), `triggerActionsOnNewEntitiesOnly` (optional), `ignorePreviousResults` (optional), `pollingInterval`, `outputs`, `specVersion` (optional), `tags` (optional), `templates` (optional), `queries`, `operations` |
+| `update-inline-question-rule` | Update existing rule | `id`, `name`, `description`, `notifyOnFailure`, `triggerActionsOnNewEntitiesOnly`, `ignorePreviousResults`, `pollingInterval`, `outputs`, `specVersion`, `version`, `tags`, `templates`, `labels`, `resourceGroupId`, `remediationSteps`, `question`, `operations` |
 | `evaluate-rule` | Trigger rule evaluation | `ruleId`: ID of the rule to evaluate |
-| `list-rule-evaluations` | Get rule evaluation history | `ruleId`, optional: `beginTimestamp`, `endTimestamp`, `limit`, `tag` |
+
+### Rule Evaluations
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list-rule-evaluations` | Get rule evaluation history | `ruleId`, `beginTimestamp` (optional), `endTimestamp` (optional), `limit` (optional), `tag` (optional) |
 | `get-rule-evaluation-details` | Get detailed evaluation results | `ruleId`, `timestamp` |
 | `get-raw-data-download-url` | Get download URL for raw data | `rawDataKey` |
 | `get-rule-evaluation-query-results` | Get query results from evaluation | `rawDataKey` |
+
+### Alert Monitoring
+| Tool | Description | Parameters |
+|------|-------------|------------|
 | `get-active-alerts` | List active alerts | `limit` (optional): Number of alerts to return (1-1000) |
+
+### Dashboard Management
+| Tool | Description | Parameters |
+|------|-------------|------------|
 | `get-dashboards` | List all dashboards | None |
 | `create-dashboard` | Create new dashboard | `name`, `type` |
 | `get-dashboard-details` | Get dashboard details | `dashboardId` |
 | `update-dashboard` | Update an existing dashboard layout | `dashboardId`, `layouts` |
+| `create-dashboard-widget` | Create a widget on a dashboard | `dashboardId`, `input` |
+
+### Integration Management
+| Tool | Description | Parameters |
+|------|-------------|------------|
 | `get-integration-definitions` | List integration definitions | `includeConfig` (optional): Include configuration fields |
-| `
+| `get-integration-instances` | Get integration instances | `definitionId` (optional), `limit` (optional) |
+| `get-integration-jobs` | List integration jobs | `status` (optional), `integrationInstanceId` (optional), `integrationDefinitionId` (optional), `integrationInstanceIds` (optional), `size` (optional) |
+| `get-integration-job` | Get details for a specific integration job | `integrationJobId`, `integrationInstanceId` |
+| `get-integration-events` | Get events for a specific integration job | `jobId`, `integrationInstanceId`, `cursor` (optional), `size` (optional) |
+
+### Account Management
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `test-connection` | Test connection to JupiterOne API and get account information | None |
+
+### Query Execution
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `execute-j1ql-query` | Execute a J1QL query | `query`, `variables` (optional), `cursor` (optional), `includeDeleted` (optional), `deferredResponse` (optional), `flags` (optional), `scopeFilters` (optional) |
