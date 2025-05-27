@@ -28,6 +28,28 @@ The tool supports various query parameters including:
 - **Relationships**: Connections between entities
   - **Relationship Class**: Always `ALLCAPS` (e.g., `HAS`, `USES`, `PROTECTS`)
 - **Default Returns**: Queries return the first entity after FIND unless explicitly modified with RETURN
+- **Unified Entities**: Deduplicated repersentation of assets seen in JupiterOne have a `_type: unified_entity`
+
+#### Unified Entities
+
+Unified entities are the deduplicated "real-world" repersentation of data seen by JupiterOne. All Unified entities have a `_type = unified_entity`, and this is often the entity the user wants referenced.
+
+Unified Entities currently supported:
+- **UnifiedDevice**: Deduplicated representation of devices in the inventory
+- **UnifiedIdentity**: Deduplicated representation of identities in the inventory
+- **UnifiedVulnerability**: Deduplicated representation of vulnerabilities in the inventory
+
+Unified entities typically also have additional enrichment making them valuable assets to search off of or reference back to. Unified entities only have relationships to the entities that they deduplicate, and you need to query off of their source components to get more context - for example a list of all devices related to users would look like:
+
+```
+FIND UnifiedIdentity AS identity
+    THAT IS << User 
+    THAT RELATES TO AS rel (Device|Host) 
+    THAT IS >> UnifiedDevice AS device
+RETURN identity.displayName, rel._class, device.displayName
+```
+
+**IMPORTANT**: Whenever answering questions about entities that have a unified entity representation, answer the question in terms of unified entities.
 
 #### MANDATORY Query Structure
 
