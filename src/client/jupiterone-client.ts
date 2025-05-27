@@ -1,37 +1,22 @@
 import { GraphQLClient } from 'graphql-request';
-import {
-  JupiterOneConfig,
-  AlertStatus,
-  ListAlertInstancesResponse,
-  InlineQuestionRuleInstance,
-  ReferencedQuestionRuleInstance,
-  CreateInlineQuestionRuleInstanceInput,
-  UpdateInlineQuestionRuleInstanceInput,
-  CreateReferencedQuestionRuleInstanceInput,
-  UpdateReferencedQuestionRuleInstanceInput,
-  ListRuleInstancesResponse,
-  ListRuleInstancesFilters,
-  QuestionRuleInstance,
-} from '../types/jupiterone.js';
-
-interface GraphQLResponse<T> {
-  [key: string]: T & {
-    instances?: any[];
-    pageInfo?: {
-      endCursor: string | null;
-      hasNextPage: boolean;
-      __typename: string;
-    };
-    __typename: string;
-  };
-}
+import { JupiterOneConfig } from '../types/jupiterone.js';
+import { AlertService } from './services/alert-service.js';
+import { RuleService } from './services/rule-service.js';
+import { DashboardService } from './services/dashboard-service.js';
+import { AccountService } from './services/account-service.js';
+import { IntegrationService } from './services/integration-service.js';
+import { J1qlService } from './services/j1ql-service.js';
 
 export class JupiterOneClient {
   private client: GraphQLClient;
-  private config: JupiterOneConfig;
+  private alertService: AlertService;
+  private ruleService: RuleService;
+  private dashboardService: DashboardService;
+  private accountService: AccountService;
+  private integrationService: IntegrationService;
+  private j1qlService: J1qlService;
 
   constructor(config: JupiterOneConfig) {
-    this.config = config;
     this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
@@ -39,520 +24,165 @@ export class JupiterOneClient {
         'LifeOmic-Account': config.accountId,
       },
     });
+
+    this.alertService = new AlertService(this.client);
+    this.ruleService = new RuleService(this.client);
+    this.dashboardService = new DashboardService(this.client);
+    this.accountService = new AccountService(this.client);
+    this.integrationService = new IntegrationService(this.client);
+    this.j1qlService = new J1qlService(this.client);
   }
 
-  /**
-   * List alert instances with optional filtering
-   */
-  async listAlertInstances(
-    alertStatus?: AlertStatus,
-    limit?: number,
-    cursor?: string
-  ): Promise<ListAlertInstancesResponse> {
-    const query = `
-      query listAlertInstances($alertStatus: AlertStatus, $limit: Int, $cursor: String) {
-        listAlertInstances(alertStatus: $alertStatus, limit: $limit, cursor: $cursor) {
-          instances {
-            ...AlertInstanceFragment
-            __typename
-          }
-          pageInfo {
-            endCursor
-            hasNextPage
-            __typename
-          }
-          __typename
-        }
-      }
-
-      fragment AlertInstanceFragment on AlertInstance {
-        accountId
-        resourceGroupId
-        createdOn
-        dismissedOn
-        endReason
-        id
-        lastEvaluationBeginOn
-        lastEvaluationEndOn
-        lastEvaluationResult {
-          answerText
-          evaluationEndOn
-          outputs {
-            name
-            value
-            __typename
-          }
-          rawDataDescriptors {
-            name
-            recordCount
-            __typename
-          }
-          __typename
-        }
-        lastUpdatedOn
-        level
-        questionRuleInstance {
-          id
-          name
-          description
-          tags
-          pollingInterval
-          labels {
-            labelName
-            labelValue
-            __typename
-          }
-          __typename
-        }
-        reportRuleInstance {
-          name
-          description
-          __typename
-        }
-        ruleId
-        ruleVersion
-        status
-        users
-        __typename
-      }
-    `;
-
-    const variables: any = {};
-    if (alertStatus) variables.alertStatus = alertStatus;
-    if (limit) variables.limit = limit;
-    if (cursor) variables.cursor = cursor;
-
-    try {
-      const response = await this.client.request<GraphQLResponse<ListAlertInstancesResponse>>(query, variables);
-
-      if (!response?.listAlertInstances) {
-        throw new Error('Invalid response structure from JupiterOne API');
-      }
-
-      const { instances = [], pageInfo = { endCursor: null, hasNextPage: false, __typename: 'PageInfo' } } = response.listAlertInstances;
-
-      return {
-        listAlertInstances: {
-          instances,
-          pageInfo,
-          __typename: 'ListAlertInstancesResponse'
-        }
-      };
-    } catch (error) {
-      console.error('Error in listAlertInstances:', error);
-      throw error;
-    }
+  // Alert methods
+  async listAlertInstances(...args: Parameters<AlertService['listAlertInstances']>) {
+    return this.alertService.listAlertInstances(...args);
   }
 
-  /**
-   * Get all alert instances by paginating through all pages
-   */
-  async getAllAlertInstances(
-    alertStatus?: AlertStatus
-  ): Promise<ListAlertInstancesResponse['listAlertInstances']['instances']> {
-    const allInstances = [];
-    let cursor: string | null = null;
-    let hasNextPage = true;
-
-    try {
-      while (hasNextPage) {
-        const response = await this.listAlertInstances(alertStatus, 100, cursor || undefined);
-
-        if (!response?.listAlertInstances?.instances) {
-          console.error('Unexpected response structure:', response);
-          break;
-        }
-
-        allInstances.push(...response.listAlertInstances.instances);
-
-        cursor = response.listAlertInstances.pageInfo.endCursor;
-        hasNextPage = response.listAlertInstances.pageInfo.hasNextPage;
-      }
-
-      return allInstances;
-    } catch (error) {
-      console.error('Error in getAllAlertInstances:', error);
-      throw error;
-    }
+  async getAllAlertInstances(...args: Parameters<AlertService['getAllAlertInstances']>) {
+    return this.alertService.getAllAlertInstances(...args);
   }
 
-  /**
-   * List rule instances using the new GraphQL query
-   */
-  async listRuleInstances(
-    limit?: number,
-    cursor?: string,
-    filters?: ListRuleInstancesFilters
-  ): Promise<ListRuleInstancesResponse> {
-    const query = `
-      query listRuleInstances($limit: Int, $cursor: String, $filters: ListRuleInstancesFilters) {
-        listRuleInstances(limit: $limit, cursor: $cursor, filters: $filters) {
-          questionInstances {
-            ...RuleInstanceFields
-            __typename
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-            __typename
-          }
-          __typename
-        }
-      }
-
-      fragment RuleInstanceFields on QuestionRuleInstance {
-        id
-        resourceGroupId
-        accountId
-        name
-        description
-        version
-        lastEvaluationStartOn
-        lastEvaluationEndOn
-        evaluationStep
-        specVersion
-        notifyOnFailure
-        triggerActionsOnNewEntitiesOnly
-        ignorePreviousResults
-        pollingInterval
-        templates
-        outputs
-        labels {
-          labelName
-          labelValue
-          __typename
-        }
-        question {
-          queries {
-            query
-            name
-            version
-            includeDeleted
-            __typename
-          }
-          __typename
-        }
-        questionId
-        latest
-        deleted
-        type
-        operations {
-          when
-          actions
-          __typename
-        }
-        latestAlertId
-        latestAlertIsActive
-        state {
-          actions
-          __typename
-        }
-        tags
-        remediationSteps
-        __typename
-      }
-    `;
-
-    const variables: any = {};
-    if (limit) variables.limit = limit;
-    if (cursor) variables.cursor = cursor;
-    if (filters) variables.filters = filters;
-
-    const response = await this.client.request<{ listRuleInstances: ListRuleInstancesResponse['listRuleInstances'] }>(query, variables);
-    return { listRuleInstances: response.listRuleInstances };
+  // Rule methods
+  async listRuleInstances(...args: Parameters<RuleService['listRuleInstances']>) {
+    return this.ruleService.listRuleInstances(...args);
   }
 
-  /**
-   * Get all rule instances by paginating through all pages
-   */
-  async getAllRuleInstances(filters?: ListRuleInstancesFilters): Promise<QuestionRuleInstance[]> {
-    const allInstances: QuestionRuleInstance[] = [];
-    let cursor: string | null = null;
-    let hasNextPage = true;
-
-    while (hasNextPage) {
-      const response = await this.listRuleInstances(100, cursor || undefined, filters);
-      if (!response?.listRuleInstances?.questionInstances) {
-        console.error('Unexpected response structure:', response);
-        break;
-      }
-      allInstances.push(...response.listRuleInstances.questionInstances);
-
-      cursor = response.listRuleInstances.pageInfo.endCursor;
-      hasNextPage = response.listRuleInstances.pageInfo.hasNextPage;
-    }
-
-    return allInstances;
+  async getAllRuleInstances(...args: Parameters<RuleService['getAllRuleInstances']>) {
+    return this.ruleService.getAllRuleInstances(...args);
   }
 
-  /**
-   * Create an inline question rule instance
-   */
   async createInlineQuestionRuleInstance(
-    instance: CreateInlineQuestionRuleInstanceInput
-  ): Promise<InlineQuestionRuleInstance> {
-    const mutation = `
-      mutation CreateInlineQuestionRuleInstance(
-        $instance: CreateInlineQuestionRuleInstanceInput!
-      ) {
-        createInlineQuestionRuleInstance(instance: $instance) {
-          id
-          name
-          description
-          version
-          pollingInterval
-          question {
-            queries {
-              query
-              name
-              version
-            }
-          }
-          operations {
-            when {
-              type
-              version
-              condition
-            }
-            actions {
-              type
-              ... on SetPropertyAction {
-                targetProperty
-                targetValue
-              }
-            }
-          }
-          outputs
-        }
-      }
-    `;
-
-    const response = await this.client.request<{ createInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
-    return response.createInlineQuestionRuleInstance;
+    ...args: Parameters<RuleService['createInlineQuestionRuleInstance']>
+  ) {
+    return this.ruleService.createInlineQuestionRuleInstance(...args);
   }
 
-  /**
-   * Update an inline question rule instance
-   */
   async updateInlineQuestionRuleInstance(
-    instance: UpdateInlineQuestionRuleInstanceInput
-  ): Promise<InlineQuestionRuleInstance> {
-    const mutation = `
-      mutation UpdateInlineQuestionRuleInstance(
-        $instance: UpdateInlineQuestionRuleInstanceInput!
-      ) {
-        updateInlineQuestionRuleInstance(instance: $instance) {
-          id
-          name
-          description
-          version
-          pollingInterval
-          question {
-            queries {
-              query
-              name
-              version
-            }
-          }
-          operations {
-            when {
-              type
-              version
-              condition
-            }
-            actions {
-              type
-              ... on SetPropertyAction {
-                targetProperty
-                targetValue
-              }
-            }
-          }
-          outputs
-        }
-      }
-    `;
-
-    const response = await this.client.request<{ updateInlineQuestionRuleInstance: InlineQuestionRuleInstance }>(mutation, { instance });
-    return response.updateInlineQuestionRuleInstance;
+    ...args: Parameters<RuleService['updateInlineQuestionRuleInstance']>
+  ) {
+    return this.ruleService.updateInlineQuestionRuleInstance(...args);
   }
 
-  /**
-   * Create a referenced question rule instance
-   */
   async createReferencedQuestionRuleInstance(
-    instance: CreateReferencedQuestionRuleInstanceInput
-  ): Promise<ReferencedQuestionRuleInstance> {
-    const mutation = `
-      mutation CreateReferencedQuestionRuleInstance(
-        $instance: CreateReferencedQuestionRuleInstanceInput!
-      ) {
-        createReferencedQuestionRuleInstance(instance: $instance) {
-          id
-          name
-          description
-          version
-          pollingInterval
-          questionId
-          questionName
-          operations {
-            when {
-              type
-              version
-              condition
-            }
-            actions {
-              type
-              ... on SetPropertyAction {
-                targetProperty
-                targetValue
-              }
-            }
-          }
-          outputs
-        }
-      }
-    `;
-
-    const response = await this.client.request<{ createReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
-    return response.createReferencedQuestionRuleInstance;
+    ...args: Parameters<RuleService['createReferencedQuestionRuleInstance']>
+  ) {
+    return this.ruleService.createReferencedQuestionRuleInstance(...args);
   }
 
-  /**
-   * Update a referenced question rule instance
-   */
   async updateReferencedQuestionRuleInstance(
-    instance: UpdateReferencedQuestionRuleInstanceInput
-  ): Promise<ReferencedQuestionRuleInstance> {
-    const mutation = `
-      mutation UpdateReferencedQuestionRuleInstance(
-        $instance: UpdateReferencedQuestionRuleInstanceInput!
-      ) {
-        updateReferencedQuestionRuleInstance(instance: $instance) {
-          id
-          name
-          description
-          version
-          pollingInterval
-          questionId
-          questionName
-          operations {
-            when {
-              type
-              version
-              condition
-            }
-            actions {
-              type
-              ... on SetPropertyAction {
-                targetProperty
-                targetValue
-              }
-            }
-          }
-          outputs
-        }
-      }
-    `;
+    ...args: Parameters<RuleService['updateReferencedQuestionRuleInstance']>
+  ) {
+    return this.ruleService.updateReferencedQuestionRuleInstance(...args);
+  }
 
-    const response = await this.client.request<{ updateReferencedQuestionRuleInstance: ReferencedQuestionRuleInstance }>(mutation, { instance });
-    return response.updateReferencedQuestionRuleInstance;
+  async deleteRuleInstance(...args: Parameters<RuleService['deleteRuleInstance']>) {
+    return this.ruleService.deleteRuleInstance(...args);
+  }
+
+  async evaluateRuleInstance(...args: Parameters<RuleService['evaluateRuleInstance']>) {
+    return this.ruleService.evaluateRuleInstance(...args);
+  }
+
+  async listRuleEvaluations(...args: Parameters<RuleService['listRuleEvaluations']>) {
+    return this.ruleService.listRuleEvaluations(...args);
+  }
+
+  async getAllRuleEvaluations(...args: Parameters<RuleService['getAllRuleEvaluations']>) {
+    return this.ruleService.getAllRuleEvaluations(...args);
+  }
+
+  async getRuleEvaluationDetails(...args: Parameters<RuleService['getRuleEvaluationDetails']>) {
+    return this.ruleService.getRuleEvaluationDetails(...args);
+  }
+
+  async getRawDataDownloadUrl(...args: Parameters<RuleService['getRawDataDownloadUrl']>) {
+    return this.ruleService.getRawDataDownloadUrl(...args);
+  }
+
+  async getRawDataResults(...args: Parameters<RuleService['getRawDataResults']>) {
+    return this.ruleService.getRawDataResults(...args);
+  }
+
+  // Dashboard methods
+  async getDashboards() {
+    return this.dashboardService.getDashboards();
+  }
+
+  async createDashboard(...args: Parameters<DashboardService['createDashboard']>) {
+    return this.dashboardService.createDashboard(...args);
+  }
+
+  async getDashboard(...args: Parameters<DashboardService['getDashboard']>) {
+    return this.dashboardService.getDashboard(...args);
+  }
+
+  async createDashboardWidget(
+    ...args: Parameters<DashboardService['createDashboardWidget']>
+  ) {
+    return this.dashboardService.createDashboardWidget(...args);
+  }
+
+  async updateDashboard(...args: Parameters<DashboardService['updateDashboard']>) {
+    return this.dashboardService.updateDashboard(...args);
+  }
+
+  // Account methods
+  async getAccountInfo() {
+    return this.accountService.getAccountInfo();
+  }
+
+  async testConnection() {
+    return this.accountService.testConnection();
+  }
+
+  // Integration methods
+  async getIntegrationDefinitions(
+    ...args: Parameters<IntegrationService['getIntegrationDefinitions']>
+  ) {
+    return this.integrationService.getIntegrationDefinitions(...args);
+  }
+
+  async getIntegrationInstances(
+    ...args: Parameters<IntegrationService['getIntegrationInstances']>
+  ) {
+    return this.integrationService.getIntegrationInstances(...args);
+  }
+
+  async getIntegrationJobs(...args: Parameters<IntegrationService['getIntegrationJobs']>) {
+    return this.integrationService.getIntegrationJobs(...args);
   }
 
   /**
-   * Delete a rule instance
+   * Get details for a specific integration job
+   * @param integrationJobId ID of the job to get
+   * @param integrationInstanceId ID of the instance the job belongs to
    */
-  async deleteRuleInstance(id: string): Promise<{ id: string }> {
-    const mutation = `
-      mutation DeleteRuleInstance($id: ID!) {
-        deleteRuleInstance(id: $id) {
-          id
-        }
-      }
-    `;
-
-    const response = await this.client.request<{ deleteRuleInstance: { id: string } }>(mutation, { id });
-    return response.deleteRuleInstance;
+  async getIntegrationJob(integrationJobId: string, integrationInstanceId: string) {
+    return this.integrationService.getIntegrationJob(integrationJobId, integrationInstanceId);
   }
 
   /**
-   * Trigger an alert rule on demand
+   * Get events for a specific integration job
+   * @param jobId ID of the job to get events for
+   * @param integrationInstanceId ID of the instance the job belongs to
+   * @param cursor Optional cursor for pagination
+   * @param size Optional size limit for number of events to return
    */
-  async evaluateRuleInstance(
-    id: string
-  ): Promise<{ id: string; __typename: string }> {
-    const query = `
-      mutation evaluateRuleInstance($id: ID!) {
-        evaluateRuleInstance(id: $id) {
-          id
-          __typename
-        }
-      }
-    `;
-
-    const response = await this.client.request<{ evaluateRuleInstance: { id: string; __typename: string } }>(query, { id });
-    return response.evaluateRuleInstance;
+  async getIntegrationEvents(
+    jobId: string,
+    integrationInstanceId: string,
+    cursor?: string,
+    size?: number
+  ) {
+    return this.integrationService.getIntegrationEvents(jobId, integrationInstanceId, cursor, size);
   }
 
-  /**
-   * Get account information
-   */
-  async getAccountInfo(): Promise<{ accountId: string; name?: string }> {
-    const query = `
-      query account {
-        iamGetAccount {
-          accountId
-          accountSubdomain
-          accountName
-          accountOwner
-          status
-          accountType
-          accountLogoUrl
-          __typename
-        }
-      }
-    `;
-
-    try {
-      const response = await this.client.request<{ iamGetAccount: { accountId: string; accountName?: string } }>(query);
-      return {
-        accountId: response.iamGetAccount.accountId,
-        name: response.iamGetAccount.accountName,
-      };
-    } catch (error) {
-      console.error('Error getting account info', error);
-      // Fallback to config if account query fails
-      return {
-        accountId: this.config.accountId,
-      };
-    }
+  // J1QL methods
+  async createJ1qlFromNaturalLanguage(...args: Parameters<J1qlService['createJ1qlFromNaturalLanguage']>) {
+    return this.j1qlService.createJ1qlFromNaturalLanguage(...args);
   }
 
-  /**
-   * Test the connection to JupiterOne
-   */
-  async testConnection(): Promise<boolean> {
-    const query = `
-      query account {
-        iamGetAccount {
-          accountId
-          accountSubdomain
-          accountName
-          accountOwner
-          status
-          accountType
-          accountLogoUrl
-          __typename
-        }
-      }
-    `;
-
-    try {
-      await this.client.request(query);
-      return true;
-    } catch (error) {
-      console.error('Error testing connection to JupiterOne', error);
-      return false;
-    }
+  async executeJ1qlQuery(...args: Parameters<J1qlService['executeJ1qlQuery']>) {
+    return this.j1qlService.executeJ1qlQuery(...args);
   }
 }
