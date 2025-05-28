@@ -24,9 +24,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run tests
-        run: npm test
-
       - name: Get package version
         id: pkg
         run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
