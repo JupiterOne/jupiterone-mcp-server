@@ -1,6 +1,97 @@
 # JupiterOne MCP Server
 
-A Model Context Protocol (MCP) server that provides access to JupiterOne account rules and alert details. This server enables AI assistants and other MCP clients to interact with JupiterOne's security monitoring and alerting system.
+A Model Context Protocol (MCP) server that provides access to JupiterOne tools. This server enables AI assistants and other MCP clients to interact with JupiterOne's data.
+
+## Configuration
+
+### Prerequisites
+
+1. **JupiterOne Account**: You need an active JupiterOne account
+2. **API Key**: Generate an API key from your JupiterOne account settings
+3. **Account ID**: Your JupiterOne account identifier
+4. Working node installation with a version >= 18
+
+### Installation with Claude Desktop
+
+To use this MCP server with Claude Desktop, you need to add it to your Claude configuration file.
+
+#### Option 1: Using npx (Recommended)
+
+Add the following configuration to your Claude Desktop configuration file:
+
+```json
+{
+  "mcpServers": {
+    "jupiterone": {
+      "command": "npx",
+      "args": ["-y", "@jupiterone/jupiterone-mcp"],
+      "env": {
+        "JUPITERONE_API_KEY": "your-api-key-here",
+        "JUPITERONE_ACCOUNT_ID": "your-account-id-here",
+        "JUPITERONE_BASE_URL": "https://graphql.us.jupiterone.io"
+      }
+    }
+  }
+}
+```
+
+#### Option 2: Global Installation (For nvm users or troubleshooting)
+
+If you're using nvm or experiencing issues with Option 1, first install the package globally:
+
+```bash
+npm install -g @jupiterone/jupiterone-mcp
+```
+
+Then add this configuration to your Claude Desktop config file:
+
+```json
+{
+  "mcpServers": {
+    "jupiterone": {
+      "command": "/usr/local/bin/node",
+      "args": ["/usr/local/bin/jupiterone-mcp"],
+      "env": {
+        "JUPITERONE_API_KEY": "your-api-key-here",
+        "JUPITERONE_ACCOUNT_ID": "your-account-id-here",
+        "JUPITERONE_BASE_URL": "https://graphql.us.jupiterone.io"
+      }
+    }
+  }
+}
+```
+
+**Note**: You may need to adjust the paths in Option 2 based on your Node.js installation:
+- For Homebrew Node.js: `/usr/local/bin/node` and `/usr/local/bin/jupiterone-mcp`
+- For nvm: `~/.nvm/versions/node/v[version]/bin/node` and `~/.nvm/versions/node/v[version]/bin/jupiterone-mcp`
+
+### Installation with Cursor
+
+For Cursor IDE, add the same configuration to your Cursor settings:
+
+1. Open Cursor Settings
+2. Navigate to "Features" → "Model Context Protocol"
+3. Add the server configuration using either Option 1 or Option 2 from above
+
+### Environment Variables
+
+Replace the placeholder values with your actual JupiterOne credentials:
+
+- **JUPITERONE_API_KEY**: Your JupiterOne API key (required)
+- **JUPITERONE_ACCOUNT_ID**: Your JupiterOne account ID (required).
+- **JUPITERONE_BASE_URL**: JupiterOne GraphQL endpoint (optional, defaults to `https://graphql.us.jupiterone.io`)
+
+### Getting Your JupiterOne Credentials
+
+1. **API Key**:
+   - Log into your JupiterOne account
+   - Go to Settings → API Keys
+   - Create a new API key or use an existing one
+
+2. **Account ID**:
+   -  This can be retrieved by either of the following:
+    - Navigating to `https://j1dev.apps.us.jupiterone.io/settings/account-management`
+    - Run the following query in your JupiterOne account: `find jupiterone_account as x return x.accountId`
 
 ## Features
 
@@ -35,6 +126,9 @@ A Model Context Protocol (MCP) server that provides access to JupiterOne account
 
 ### Account Management
 - **test-connection** - Test connection to JupiterOne API and get account information
+
+### Query Execution
+- **execute-j1ql-query** - Execute a J1QL query
 
 ## Available Tools
 
