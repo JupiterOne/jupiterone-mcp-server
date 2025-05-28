@@ -48,10 +48,8 @@ async function main() {
   }
 }
 
-// Only run if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('jupiterone-mcp')) {
-  main().catch((error) => {
-    console.error('Unhandled error:', error);
-    process.exit(1);
-  });
-}
+// Start the server
+main().catch((error) => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+});
