@@ -1,38 +1,47 @@
-# JupiterOne Rule Creation Tool - Complete Guide
+# JupiterOne Rule Update Tool - Complete Guide
 
-**Purpose**: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
+**Purpose**: Updates existing inline question-based alert rules in JupiterOne. This tool modifies the configuration of an existing rule while preserving its identity and version history.
 
-The first step in creating a rule is to identify the query you want to use in order to get the data you want to take action with. Use the `execute-j1ql-query` tool to find the correct query.
+**Important**: Before updating a rule, use the `get-rule-details` tool to retrieve the current configuration. This ensures you have all required fields and can see what needs to be changed.
 
-## Key Requirements for Success
+## Key Requirements for Updates
 
-### 1. Condition Format (Critical)
+### 1. Required Fields for Updates
+When updating a rule, you must provide **ALL** fields, not just the ones you want to change. The update operation replaces the entire rule configuration, so missing fields will result in errors.
+
+**Critical Required Fields**:
+- `id`: The existing rule ID (from `get-rule-details`)
+- `version`: The current version number (from `get-rule-details`)
+- `specVersion`: Usually 1
+- `ignorePreviousResults`: Must be included
+- `templates`: Must be included (use `{}` if empty)
+- `tags`: Must be included but should always be empty `[]` (deprecated)
+- `labels`: Use this for actual tagging functionality
+- `resourceGroupId`: Must be included (can be null)
+- `remediationSteps`: Must be included (can be null)
+
+### 2. Condition Format (Critical)
 The `condition` parameter must use JupiterOne's specific array format:
 - **Structure**: `["LOGICAL_OPERATOR", [left_value, operator, right_value]]`
 - **Example**: `["AND", ["queries.queryName.total", ">", 0]]`
 - **Supported operators**: `>`, `<`, `>=`, `<=`, `=`, `!=`
 - **Logical operators**: `"AND"`, `"OR"`
 
-### 2. Operations Structure
+### 3. Operations Structure
 The `when` clause should only contain:
 - `type`: Always `"FILTER"`
 - `condition`: The array format described above
 - **Do NOT include**: `version`, `specVersion` (these belong at the rule level, not in the when clause)
 
-### 3. Query Naming Convention
+### 4. Query Naming Convention
 - Query names in the `queries` array must match the references in conditions
 - Example: If query name is `"users"`, reference it as `"queries.users.total"`
 - **IMPORTANT**: Use `"query0"` as the standard query name for compatibility with existing patterns
 
-### 4. New Entity Detection
-- Use `triggerActionsOnNewEntitiesOnly: true` to only alert on genuinely new entities
-- This prevents re-alerting on existing entities every polling cycle
-- Essential for "new user" or "new resource" type alerts
-
-### 5. Polling Intervals
-- **Default**: Use `"ONE_DAY"` unless the user specifically requests a different interval
-- **Available options**: `"DISABLED"`, `"THIRTY_MINUTES"`, `"ONE_HOUR"`, `"FOUR_HOURS"`, `"EIGHT_HOURS"`, `"TWELVE_HOURS"`, `"ONE_DAY"`, `"ONE_WEEK"`
-- Only use more frequent intervals (like `"THIRTY_MINUTES"`) when explicitly requested or for time-sensitive security alerts
+### 5. Version Management
+- The `version` field will be automatically incremented by JupiterOne
+- You must provide the current version number in your update request
+- Get the current version using `get-rule-details` before updating
 
 ### 6. Tags vs Labels (Important)
 - **DEPRECATED**: The `tags` array field is deprecated and should always be set to an empty array `[]`
@@ -41,20 +50,35 @@ The `when` clause should only contain:
 - **When users ask for tagging**: Always use the `labels` field to meet their needs
 - **Note**: The `tags` field is still required in the schema for compatibility but should remain empty
 
-## Required Schema Fields
+## Update Workflow
 
-### Complete Required Parameters for create-inline-question-rule
-**CRITICAL**: All of these fields must be included for successful rule creation:
+### Step 1: Get Current Rule Configuration
+```
+Use get-rule-details with the rule ID to get the current configuration
+```
+
+### Step 2: Modify Required Fields
+Update only the fields you need to change while preserving all other required fields.
+
+### Step 3: Submit Update
+Use this tool with the complete configuration including your changes.
+
+## Required Schema Fields for Updates
+
+### Complete Required Parameters for update-inline-question-rule
+**CRITICAL**: All of these fields must be included for successful rule updates:
 
 ```json
 {
-  "name": "Rule Name",
-  "description": "Rule description",
+  "id": "existing-rule-id",
+  "name": "Updated Rule Name",
+  "description": "Updated rule description",
   "notifyOnFailure": true,
   "triggerActionsOnNewEntitiesOnly": true,
   "ignorePreviousResults": false,
   "pollingInterval": "ONE_DAY",
   "specVersion": 1,
+  "version": 2,
   "templates": {},
   "outputs": ["alertLevel"],
   "tags": [],
@@ -62,14 +86,18 @@ The `when` clause should only contain:
     {"labelName": "environment", "labelValue": "production"},
     {"labelName": "team", "labelValue": "security"}
   ],
-  "queries": [
-    {
-      "query": "FIND Entity...",
-      "name": "query0",
-      "version": "v1",
-      "includeDeleted": false
-    }
-  ],
+  "resourceGroupId": null,
+  "remediationSteps": null,
+  "question": {
+    "queries": [
+      {
+        "query": "FIND Entity...",
+        "name": "query0",
+        "version": "v1",
+        "includeDeleted": false
+      }
+    ]
+  },
   "operations": [
     {
       "when": {
@@ -82,11 +110,15 @@ The `when` clause should only contain:
 }
 ```
 
-**Key Schema Requirements**:
+**Key Update Requirements**:
+- `id`: Must match the existing rule ID
+- `version`: Must be the current version number from the existing rule
 - `ignorePreviousResults`: Must be included (typically `false`)
 - `templates`: Must be included (use `{}` if empty)
 - `tags`: Must be included but should always be empty `[]` (deprecated field)
 - `labels`: Use this for actual tagging functionality with key-value pairs
+- `resourceGroupId`: Must be included (can be null)
+- `remediationSteps`: Must be included (can be null)
 - Query `name`: Use `"query0"` for primary query
 - Query `version`: Include `"v1"` for compatibility
 - Query `includeDeleted`: Must be explicitly set to `false`
@@ -131,14 +163,6 @@ Sends email notifications to specified recipients.
 }
 ```
 
-**Required Information to Ask User**:
-- Email addresses of recipients
-- Custom email body content (if desired)
-
-**Template Variables Available**:
-- `{{alertWebLink}}` - Link to the alert in JupiterOne
-- `{{queries.queryName.data|mapProperty('fieldName')|join('separator')}}` - Format query results
-
 ### 4. TAG_ENTITIES
 Adds or removes tags from entities that triggered the rule.
 
@@ -154,10 +178,6 @@ Adds or removes tags from entities that triggered the rule.
 }
 ```
 
-**Required Information to Ask User**:
-- Tag names and values to add
-- Tag names to remove (set value to `null`)
-
 ### 5. SEND_SLACK_MESSAGE
 Sends messages to Slack channels (requires Slack integration).
 
@@ -170,11 +190,6 @@ Sends messages to Slack channels (requires Slack integration).
   "body": "*Affected Items:* \n\n- {{queries.query0.data|mapProperty('displayName')|join('\n- ')}}"
 }
 ```
-
-**Required Information to Ask User**:
-- Slack channel names (with # prefix)
-- Slack integration instance ID (may need to query available integrations)
-- Custom message content (if desired)
 
 ### 6. SEND_TO_S3
 Sends alert data to an S3 bucket (requires AWS S3 integration).
@@ -191,12 +206,6 @@ Sends alert data to an S3 bucket (requires AWS S3 integration).
   }
 }
 ```
-
-**Required Information to Ask User**:
-- S3 bucket name
-- AWS region
-- S3 integration instance ID
-- Data structure to send
 
 ### 7. CREATE_JIRA_TICKET
 Creates a Jira ticket for the alert (requires Jira integration).
@@ -231,15 +240,6 @@ Creates a Jira ticket for the alert (requires Jira integration).
 }
 ```
 
-**Required Information to Ask User**:
-- Jira project key
-- Issue type (Bug, Task, Story, etc.)
-- Ticket summary/title
-- Jira integration instance ID
-- Additional fields as needed
-
-**Common Entity Classes**: `"Finding"`, `"Incident"`, `"Issue"`
-
 ## Template Variables and Formatting
 
 ### Available Variables
@@ -251,11 +251,6 @@ Creates a Jira ticket for the alert (requires Jira integration).
 - `|mapProperty('fieldName')` - Extract specific field from each entity
 - `|join('separator')` - Join array elements with specified separator
 - Example: `{{queries.users.data|mapProperty('displayName')|join(', ')}}` - Creates comma-separated list of user names
-
-### Common Formatting Patterns
-- **HTML list**: `{{queries.query0.data|mapProperty('displayName')|join('<br>* ')}}`
-- **Markdown list**: `{{queries.query0.data|mapProperty('displayName')|join('\n- ')}}`
-- **Simple list**: `{{queries.query0.data|mapProperty('displayName')|join('\n* ')}}`
 
 ## Integration Dependencies
 
@@ -269,20 +264,20 @@ For actions requiring integrations, you may need to:
 - `SEND_TO_S3` (AWS S3 integration)
 - `CREATE_JIRA_TICKET` (Jira integration)
 
-## Working Example Template
+## Working Example Update
 
-### Complete Working Rule Structure
-Based on confirmed working examples, use this template:
-
+### Complete Working Rule Update Structure
 ```json
 {
-  "name": "Your Rule Name",
-  "description": "Your rule description",
+  "id": "12345678-1234-1234-1234-123456789abc",
+  "name": "Updated Rule Name",
+  "description": "Updated rule description",
   "notifyOnFailure": true,
   "triggerActionsOnNewEntitiesOnly": true,
   "ignorePreviousResults": false,
   "pollingInterval": "ONE_DAY",
   "specVersion": 1,
+  "version": 3,
   "templates": {},
   "outputs": ["alertLevel"],
   "tags": [],
@@ -290,14 +285,18 @@ Based on confirmed working examples, use this template:
     {"labelName": "severity", "labelValue": "high"},
     {"labelName": "category", "labelValue": "security"}
   ],
-  "queries": [
-    {
-      "query": "FIND Entity WITH condition",
-      "name": "query0",
-      "version": "v1",
-      "includeDeleted": false
-    }
-  ],
+  "resourceGroupId": null,
+  "remediationSteps": "1. Review the affected entities\n2. Apply security patches\n3. Update configurations",
+  "question": {
+    "queries": [
+      {
+        "query": "FIND Entity WITH condition",
+        "name": "query0",
+        "version": "v1",
+        "includeDeleted": false
+      }
+    ]
+  },
   "operations": [
     {
       "when": {
@@ -315,8 +314,8 @@ Based on confirmed working examples, use this template:
         },
         {
           "type": "SEND_EMAIL",
-          "recipients": ["user@company.com"],
-          "body": "Affected Items: <br><br>* {{queries.query0.data|mapProperty('displayName')|join('<br>* ')}}"
+          "recipients": ["updated-user@company.com"],
+          "body": "Updated notification: {{alertWebLink}}"
         }
       ]
     }
@@ -324,51 +323,41 @@ Based on confirmed working examples, use this template:
 }
 ```
 
-## Common Patterns
+## Common Update Scenarios
 
-### New Entity Monitoring
-```json
-{
-  "condition": ["AND", ["queries.query0.total", ">", 0]],
-  "triggerActionsOnNewEntitiesOnly": true
-}
-```
+### 1. Changing Notification Recipients
+Update only the `recipients` array in the `SEND_EMAIL` action while preserving all other fields.
 
-### Threshold-based Alerts
-```json
-{
-  "condition": ["AND", ["queries.query0.total", ">=", 5]]
-}
-```
+### 2. Modifying Polling Interval
+Update the `pollingInterval` field while keeping all other configuration the same.
 
-### Multi-action Rule Example
-```json
-"actions": [
-  {"type": "SET_PROPERTY", "targetProperty": "alertLevel", "targetValue": "HIGH"},
-  {"type": "CREATE_ALERT"},
-  {"type": "SEND_EMAIL", "recipients": ["security@company.com"], "body": "Security issue detected: {{alertWebLink}}"},
-  {"type": "TAG_ENTITIES", "entities": "{{queries.query0.data}}", "tags": [{"name": "needs-review", "value": "true"}]}
-]
-```
+### 3. Adding New Actions
+Add new actions to the `actions` array in the operations.
+
+### 4. Updating Query Logic
+Modify the `query` string in the queries array or adjust the `condition` in operations.
+
+### 5. Changing Labels
+Update the `labels` array to add, remove, or modify rule labels.
 
 ## Debugging Tips
+- Always start by getting the current rule configuration with `get-rule-details`
+- Ensure the `version` number matches the current rule version
+- Include ALL required fields, even if they're not changing
 - If you get "Invalid conjunction operator" errors, check the condition array format
 - If you get "additional properties" errors, remove extra fields from the `when` clause
 - If you get missing property errors, ensure all required schema fields are included
-- **Always include**: `ignorePreviousResults`, `templates`, `tags`, query `version` and `includeDeleted`
-- Always reference existing rules with `get-rule-details` to see working examples
-- Test with simple conditions first, then add complexity
+- **Always include**: `id`, `version`, `ignorePreviousResults`, `templates`, `tags`, `labels`, `resourceGroupId`, `remediationSteps`
 - Use `"query0"` as the standard query name for compatibility
 
-## Best Practices
-- Use descriptive query names that match their purpose (but prefer `"query0"` for main query)
-- Include relevant entity fields in `outputs` for alert context
-- Set appropriate polling intervals (default to `"ONE_DAY"` unless specified)
+## Best Practices for Updates
+- Always retrieve the current rule configuration first using `get-rule-details`
+- Only modify the fields that actually need to change
+- Preserve the existing `version` number (it will be auto-incremented)
 - Use the `labels` field for rule organization and tagging (not the deprecated `tags` field)
-- Use `notifyOnFailure: true` to catch rule execution issues
-- Always include `CREATE_ALERT` action as a baseline
-- Always include all required schema fields from the working template
-- Ask users for specific details when configuring notification actions (emails, channels, etc.)
+- Test rule changes with simple modifications first
+- Document changes in the `description` field if significant
 - When users request tagging functionality, use the `labels` field with key-value pairs
+- Always include `CREATE_ALERT` action as a baseline unless specifically removing it
 
-This format ensures reliable rule creation and helps avoid common pitfalls encountered during rule development.
+This format ensures reliable rule updates and helps avoid common pitfalls encountered during rule modification.

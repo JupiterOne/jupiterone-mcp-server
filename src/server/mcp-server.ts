@@ -34,11 +34,12 @@ export class JupiterOneMcpServer {
       loadDescription('list-rules.md'),
       {
         limit: z.number().min(1).max(1000).optional(),
+        cursor: z.string().optional(),
       },
-      async ({ limit }) => {
+      async ({ limit, cursor }) => {
         try {
-          const instances = await this.client.getAllRuleInstances();
-          const limitedInstances = limit ? instances.slice(0, limit) : instances;
+          const response = await this.client.listRuleInstances(limit, cursor);
+          const instances = response.questionInstances || [];
 
           return {
             content: [
@@ -46,9 +47,8 @@ export class JupiterOneMcpServer {
                 type: 'text',
                 text: JSON.stringify(
                   {
-                    total: instances.length,
-                    returned: limitedInstances.length,
-                    rules: limitedInstances.map((instance) => ({
+                    returned: instances.length,
+                    rules: instances.map((instance) => ({
                       id: instance.id,
                       name: instance.name,
                       description: instance.description,
@@ -62,6 +62,7 @@ export class JupiterOneMcpServer {
                       tags: instance.tags,
                       outputs: instance.outputs,
                     })),
+                    pageInfo: response.pageInfo,
                   },
                   null,
                   2
@@ -994,6 +995,7 @@ export class JupiterOneMcpServer {
     // Tool: Update inline question rule instance
     this.server.tool(
       'update-inline-question-rule',
+      loadDescription('update-inline-question-rule.md'),
       {
         id: z.string().describe('ID of the rule to update'),
         name: z.string().describe('Name of the rule'),
