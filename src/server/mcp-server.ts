@@ -564,12 +564,14 @@ export class JupiterOneMcpServer {
     // Tool: Get integration definitions
     this.server.tool(
       'get-integration-definitions',
+      loadDescription('get-integration-definitions.md'),
       {
+        cursor: z.string().optional().describe('Optional cursor for pagination'),
         includeConfig: z.boolean().optional().describe('Whether to include configuration fields'),
       },
-      async ({ includeConfig }) => {
+      async ({ cursor, includeConfig }) => {
         try {
-          const definitions = await this.client.getIntegrationDefinitions(undefined, includeConfig);
+          const definitions = await this.client.getIntegrationDefinitions(cursor, includeConfig);
 
           return {
             content: [
@@ -628,6 +630,7 @@ export class JupiterOneMcpServer {
     // Tool: Get integration instances
     this.server.tool(
       'get-integration-instances',
+      loadDescription('get-integration-instances.md'),
       {
         definitionId: z
           .string()
