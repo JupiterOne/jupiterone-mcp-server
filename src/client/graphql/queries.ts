@@ -314,59 +314,11 @@ export const GET_INTEGRATION_DEFINITIONS = `
     name
     type
     title
-    displayMode
-    oAuth {
-      oAuthUrlGeneratorPath
-      __typename
-    }
-    offsiteUrl
-    offsiteButtonTitle
-    offsiteStatusQuery
     integrationType
     integrationClass
     integrationCategory
-    beta
-    docsWebLink
-    repoWebLink
-    invocationPaused
-    managedExecutionDisabled
-    managedCreateDisabled
-    managedDeleteDisabled
-    integrationPlatformFeatures {
-      supportsChildInstances
-      supportsCollectors
-      supportsIngestionSourcesConfig
-      supportsAgentConfigurations
-      __typename
-    }
-    ingestionSourcesConfig {
-      id
-      title
-      description
-      defaultsToDisabled
-      childIngestionSourcesMetadata {
-        id
-        name
-        __typename
-      }
-      cannotBeDisabled
-      __typename
-    }
-    ingestionSourcesOverrides {
-      enabled
-      ingestionSourceId
-      __typename
-    }
     totalInstanceCount
-    integrationJobStatusMetrics {
-      count
-      status
-      __typename
-    }
-    icon
-    provisioningType
     description
-    customDefinitionType
     ...IntegrationDefinitionConfigFragment @include(if: $includeConfig)
     __typename
   }
