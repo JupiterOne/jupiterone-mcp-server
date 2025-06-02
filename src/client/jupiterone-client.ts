@@ -14,7 +14,7 @@ export class JupiterOneClient {
   private dashboardService: DashboardService;
   private accountService: AccountService;
   private integrationService: IntegrationService;
-  private j1qlService: J1qlService;
+  public j1qlService: J1qlService;
 
   constructor(config: JupiterOneConfig) {
     this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {

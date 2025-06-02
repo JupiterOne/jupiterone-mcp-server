@@ -47,3 +47,5 @@ jest.config.js
 
 # TypeScript
 *.tsbuildinfo
+CLAUDE.md
+IMPROVEMENTS.md

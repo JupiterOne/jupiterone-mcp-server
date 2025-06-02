@@ -644,13 +644,13 @@ export const GET_RAW_DATA_DOWNLOAD_URL = `
   }
 `;
 
-// J1QL Query Executor
-export const QUERY_V1 = `
-  query J1QL($query: String!, $variables: JSON, $cursor: String, $scopeFilters: [JSON!], $flags: QueryV1Flags) {
-    queryV1(query: $query, variables: $variables, cursor: $cursor, scopeFilters: $scopeFilters, flags: $flags) {
+// J1QL Query Executor V2 - Provides more detailed error messages
+export const QUERY_V2 = `
+  query J1QLv2($query: String!, $variables: JSON, $cursor: String, $scopeFilters: JSON, $includeDeleted: Boolean, $returnRowMetadata: Boolean, $returnComputedProperties: Boolean) {
+    queryV2(query: $query, variables: $variables, cursor: $cursor, scopeFilters: $scopeFilters, includeDeleted: $includeDeleted, returnRowMetadata: $returnRowMetadata, returnComputedProperties: $returnComputedProperties) {
       type
-      data
-      cursor
+      url
+      correlationId
     }
   }
 `;
