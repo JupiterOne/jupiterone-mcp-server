@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/jupiterone-mcp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Model Context Protocol server for JupiterOne account rules and rule details",
   "type": "module",
   "main": "dist/index.js",
