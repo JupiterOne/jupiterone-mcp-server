@@ -51,12 +51,37 @@ export class J1qlService {
     
     // Handle deferred response
     if (response.queryV2.type === 'deferred' && response.queryV2.url) {
-      // Fetch the actual results from the URL
-      const fetchResponse = await fetch(response.queryV2.url);
-      if (!fetchResponse.ok) {
-        throw new Error(`Failed to fetch query results: ${fetchResponse.statusText}`);
+      // Poll the URL until results are ready
+      const maxAttempts = 60; // 60 attempts = 1 minute max wait
+      const pollInterval = 1000; // 1 second between polls
+      
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const fetchResponse = await fetch(response.queryV2.url);
+        if (!fetchResponse.ok) {
+          throw new Error(`Failed to fetch query results: ${fetchResponse.statusText}`);
+        }
+        
+        const result = await fetchResponse.json();
+        
+        // Check if the query is complete
+        if (result.status === 'COMPLETE' || result.status === 'FAILED') {
+          if (result.status === 'FAILED') {
+            throw new Error(result.error || 'Query execution failed');
+          }
+          return result;
+        }
+        
+        // If still in progress, wait before next poll
+        if (result.status === 'IN_PROGRESS') {
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
+          continue;
+        }
+        
+        // If we get an unexpected status, return the result as-is
+        return result;
       }
-      return await fetchResponse.json();
+      
+      throw new Error('Query timed out after 60 seconds');
     }
     
     return response.queryV2;
