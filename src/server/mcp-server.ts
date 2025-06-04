@@ -1802,9 +1802,11 @@ export class JupiterOneMcpServer {
   }
 
   // Helper methods for validation
-  private async validateQueries(queries: any[]): Promise<Array<{queryName: string, error: string, suggestion: string}>> {
+  private async validateQueries(
+    queries: any[]
+  ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
     if (!queries || !Array.isArray(queries)) return [];
-    
+
     const validationResults = [];
     for (const queryObj of queries) {
       if (queryObj.query) {
@@ -1813,7 +1815,7 @@ export class JupiterOneMcpServer {
           validationResults.push({
             queryName: queryObj.name || 'Unnamed query',
             error: validation.error || 'Query validation failed',
-            suggestion: validation.suggestion || 'Please check the query syntax and try again'
+            suggestion: validation.suggestion || 'Please check the query syntax and try again',
           });
         }
       }
@@ -1821,19 +1823,25 @@ export class JupiterOneMcpServer {
     return validationResults;
   }
 
-  private async validateWidgetQueries(queries: any[]): Promise<Array<{queryName: string, error: string, suggestion: string}>> {
+  private async validateWidgetQueries(
+    queries: any[]
+  ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
     // Use the same validation logic as rules - actually execute the queries
     return this.validateQueries(queries);
   }
 
-  private createValidationErrorResponse(validationResults: Array<{queryName: string, error: string, suggestion: string}>) {
+  private createValidationErrorResponse(
+    validationResults: Array<{ queryName: string; error: string; suggestion: string }>
+  ) {
     return {
       content: [
         {
           type: 'text' as const,
-          text: `Query validation failed. Please fix the following issues:\n\n${validationResults.map(r => 
-            `Query: ${r.queryName}\nError: ${r.error}\nSuggestion: ${r.suggestion}`
-          ).join('\n\n')}\n\nUse the execute-j1ql-query tool to test and refine your queries first.`,
+          text: `Query validation failed. Please fix the following issues:\n\n${validationResults
+            .map((r) => `Query: ${r.queryName}\nError: ${r.error}\nSuggestion: ${r.suggestion}`)
+            .join(
+              '\n\n'
+            )}\n\nUse the execute-j1ql-query tool to test and refine your queries first.`,
         },
       ],
       isError: true,
@@ -1842,7 +1850,7 @@ export class JupiterOneMcpServer {
 
   private createQueryErrorResponse(error: any, query: string) {
     const errorResult = this.validator.handleQueryError(error, query);
-    
+
     return {
       content: [
         {
