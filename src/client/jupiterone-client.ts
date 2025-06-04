@@ -14,7 +14,7 @@ export class JupiterOneClient {
   private dashboardService: DashboardService;
   private accountService: AccountService;
   private integrationService: IntegrationService;
-  private j1qlService: J1qlService;
+  public j1qlService: J1qlService;
 
   constructor(config: JupiterOneConfig) {
     this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {
@@ -116,9 +116,7 @@ export class JupiterOneClient {
     return this.dashboardService.getDashboard(...args);
   }
 
-  async createDashboardWidget(
-    ...args: Parameters<DashboardService['createDashboardWidget']>
-  ) {
+  async createDashboardWidget(...args: Parameters<DashboardService['createDashboardWidget']>) {
     return this.dashboardService.createDashboardWidget(...args);
   }
 
@@ -178,7 +176,9 @@ export class JupiterOneClient {
   }
 
   // J1QL methods
-  async createJ1qlFromNaturalLanguage(...args: Parameters<J1qlService['createJ1qlFromNaturalLanguage']>) {
+  async createJ1qlFromNaturalLanguage(
+    ...args: Parameters<J1qlService['createJ1qlFromNaturalLanguage']>
+  ) {
     return this.j1qlService.createJ1qlFromNaturalLanguage(...args);
   }
 

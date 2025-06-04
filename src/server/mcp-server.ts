@@ -12,13 +12,16 @@ import {
   ActionEvaluationDetails,
 } from '../types/jupiterone.js';
 import { loadDescription } from '../utils/load-description.js';
+import { J1QLValidator } from '../utils/j1ql-validator.js';
 
 export class JupiterOneMcpServer {
   private server: McpServer;
   private client: JupiterOneClient;
+  private validator: J1QLValidator;
 
   constructor(config: JupiterOneConfig) {
     this.client = new JupiterOneClient(config);
+    this.validator = new J1QLValidator(this.client.j1qlService);
     this.server = new McpServer({
       name: 'jupiterone-mcp',
       version: '1.0.0',
@@ -44,7 +47,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     returned: instances.length,
@@ -74,7 +77,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error listing rules: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -99,7 +102,7 @@ export class JupiterOneMcpServer {
             return {
               content: [
                 {
-                  type: 'text',
+                  type: 'text' as const,
                   text: `Rule with ID ${ruleId} not found`,
                 },
               ],
@@ -110,7 +113,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     id: rule.id,
@@ -173,7 +176,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting rule details: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -230,7 +233,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     ruleId,
@@ -247,7 +250,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error evaluating rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -277,7 +280,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     total: instances.length,
@@ -320,7 +323,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting active alerts: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your JupiterOne API credentials and connection.`,
               },
             ],
@@ -397,7 +400,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     id: result.id,
@@ -414,7 +417,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error creating dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -437,7 +440,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     id: dashboard.id,
@@ -552,7 +555,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting dashboard details: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -577,7 +580,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     total: definitions.definitions.length,
@@ -618,7 +621,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting integration definitions: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -655,7 +658,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     total: instances.instances.length,
@@ -695,7 +698,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting integration instances: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -752,7 +755,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     total: jobs.jobs.length,
@@ -785,7 +788,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting integration jobs: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -928,6 +931,12 @@ export class JupiterOneMcpServer {
         operations,
       }) => {
         try {
+          // Validate all queries before creating the rule
+          const validationResults = await this.validateQueries(queries);
+          if (validationResults.length > 0) {
+            return this.createValidationErrorResponse(validationResults);
+          }
+
           const instance = {
             name,
             description,
@@ -950,7 +959,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     success: true,
@@ -982,7 +991,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error creating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1138,6 +1147,12 @@ export class JupiterOneMcpServer {
         operations,
       }) => {
         try {
+          // Validate all queries before updating the rule
+          const validationResults = await this.validateQueries(question?.queries);
+          if (validationResults.length > 0) {
+            return this.createValidationErrorResponse(validationResults);
+          }
+
           const instance = {
             id,
             name,
@@ -1163,7 +1178,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     success: true,
@@ -1198,7 +1213,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error updating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1221,7 +1236,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     id: job.id,
@@ -1243,7 +1258,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
               },
             ],
@@ -1278,7 +1293,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     events: events.events.map((event) => ({
@@ -1302,7 +1317,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
               },
             ],
@@ -1336,7 +1351,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     total: evaluations.length,
@@ -1361,7 +1376,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error listing rule evaluations: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1388,7 +1403,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     accountRuleId: details.accountRuleId,
@@ -1446,7 +1461,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting rule evaluation details: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1469,7 +1484,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(
                   {
                     rawDataKey,
@@ -1485,7 +1500,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting raw data download URL: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1507,7 +1522,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(results, null, 2),
               },
             ],
@@ -1516,7 +1531,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error getting rule evaluation query results: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1589,11 +1604,18 @@ export class JupiterOneMcpServer {
               throw new Error('Input must be a valid object or JSON string');
             }
           }
+
+          // Validate queries before creating widget
+          const validationResults = await this.validateWidgetQueries(widgetInput.config?.queries);
+          if (validationResults.length > 0) {
+            return this.createValidationErrorResponse(validationResults);
+          }
+
           const widget = await this.client.createDashboardWidget(dashboardId, widgetInput);
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(widget, null, 2),
               },
             ],
@@ -1602,7 +1624,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error creating dashboard widget: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1694,7 +1716,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(updated, null, 2),
               },
             ],
@@ -1703,7 +1725,7 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: `Error updating dashboard: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
@@ -1767,24 +1789,77 @@ export class JupiterOneMcpServer {
           return {
             content: [
               {
-                type: 'text',
+                type: 'text' as const,
                 text: JSON.stringify(result, null, 2),
               },
             ],
           };
         } catch (error) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Error executing J1QL query: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              },
-            ],
-            isError: true,
-          };
+          return this.createQueryErrorResponse(error, query);
         }
       }
     );
+  }
+
+  // Helper methods for validation
+  private async validateQueries(
+    queries: any[]
+  ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
+    if (!queries || !Array.isArray(queries)) return [];
+
+    const validationResults = [];
+    for (const queryObj of queries) {
+      if (queryObj.query) {
+        const validation = await this.validator.validateQuery(queryObj.query);
+        if (!validation.isValid) {
+          validationResults.push({
+            queryName: queryObj.name || 'Unnamed query',
+            error: validation.error || 'Query validation failed',
+            suggestion: validation.suggestion || 'Please check the query syntax and try again',
+          });
+        }
+      }
+    }
+    return validationResults;
+  }
+
+  private async validateWidgetQueries(
+    queries: any[]
+  ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
+    // Use the same validation logic as rules - actually execute the queries
+    return this.validateQueries(queries);
+  }
+
+  private createValidationErrorResponse(
+    validationResults: Array<{ queryName: string; error: string; suggestion: string }>
+  ) {
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `Query validation failed. Please fix the following issues:\n\n${validationResults
+            .map((r) => `Query: ${r.queryName}\nError: ${r.error}\nSuggestion: ${r.suggestion}`)
+            .join(
+              '\n\n'
+            )}\n\nUse the execute-j1ql-query tool to test and refine your queries first.`,
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  private createQueryErrorResponse(error: any, query: string) {
+    const errorResult = this.validator.handleQueryError(error, query);
+
+    return {
+      content: [
+        {
+          type: 'text' as const,
+          text: `Error executing J1QL query:\n\n${errorResult.error}\n\nSuggestion: ${errorResult.suggestion}\n\nDebugging tips:\n1. Modify existing queries that are already working as expected.\n2. Use discovery queries to understand available data\n3. Verify entity classes exist (use proper capitalization)\n4. Check property names match exactly\n5. Use single quotes for strings, not double quotes\n6. Place aliases after WITH statements\n7. Add LIMIT clause to prevent timeouts`,
+        },
+      ],
+      isError: true,
+    };
   }
 
   async start(): Promise<void> {

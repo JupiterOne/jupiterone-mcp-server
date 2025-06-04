@@ -15,9 +15,9 @@ The tool supports various query parameters including:
 - Applying scope filters
 - Pagination using cursors
 
-### JupiterOne Query Language (J1QL) Guide for AI Agents
+### JupiterOne Query Language (J1QL) Quick Reference
 
-> **CRITICAL:** Follow this guide strictly. Any deviation may result in query failure. Do not use operators not documented here.
+> **IMPORTANT:** Always validate queries using this tool before creating rules or widgets. Start with discovery queries if unsure about data structure.
 
 #### Core Concepts
 
@@ -317,48 +317,12 @@ RETURN u.username, p.email, d.name
 LIMIT 10
 ```
 
-#### Discovery Techniques (ALWAYS USE THESE FIRST)
+#### Discovery Queries - ALWAYS START HERE
 
-FIRST:
-**Identify entity classes and counts**:
-```j1ql
-FIND * AS ent RETURN ent._class, COUNT(ent)
-```
-
-SECOND:
-**Discover properties on an entity**:
-```j1ql
-FIND User AS ent RETURN ent.* LIMIT 100
-```
-
-THIRD:
-**Find how entities are related**:
-```j1ql
-FIND User THAT RELATES TO AS rel * AS ent RETURN rel._class, ent._type, COUNT(ent)
-```
-
-FORTH:
-**Discover property values**:
-```j1ql
-FIND User AS ent RETURN ent.status, COUNT(ent)
-```
-
-ADDITIONAL:
-
-**Identify properties on related entities**:
-```j1ql
-FIND User THAT RELATES TO Device AS ent RETURN ent.* LIMIT 100
-```
-
-**Find related entity types**:
-```j1ql
-FIND User THAT RELATES TO * AS ent RETURN ent._type, COUNT(ent)
-```
-
-**Identify relationship classes**:
-```j1ql
-FIND User THAT RELATES TO AS rel * AS ent RETURN rel._class, ent._type, COUNT(ent)
-```
+1. **Find all entity classes**: `FIND * AS e RETURN e._class, COUNT(e)`
+2. **Explore entity properties**: `FIND EntityClass AS e RETURN e.* LIMIT 10`
+3. **Discover relationships**: `FIND Entity1 THAT RELATES TO AS rel Entity2 RETURN rel._class`
+4. **Check property values**: `FIND Entity AS e RETURN e.property, COUNT(e)`
 
 #### ⚠️ QUERY VALIDATION CHECKLIST ⚠️
 
@@ -373,54 +337,43 @@ Before running any J1QL query, verify:
 7. ✓ Optional traversals use proper parentheses and question mark syntax
 8. ✓ All aliases referenced in RETURN or WHERE are properly defined earlier
 
-#### Common Errors to Avoid
+#### Most Common Errors (Quick Reference)
 
-1. **Syntax Errors**:
-   - ❌ Using LIKE comparison (use ~= instead)
-   - ❌ Using IS to test for undefined (use property=undefined instead)
-   - ❌ Placing alias before WITH statement
-   - ❌ Using double quotes for strings
-   - ❌ Missing LIMIT clause
+1. **Missing quotes**: `name = john` → `name = 'john'`
+2. **Wrong quotes**: `name = "john"` → `name = 'john'`  
+3. **Alias placement**: `AS u WITH active = true` → `WITH active = true AS u`
+4. **WHERE needs alias**: `WHERE active = true` → `AS u WHERE u.active = true`
+5. **Undefined alias**: `FIND User RETURN u.name` → `FIND User AS u RETURN u.name`
+6. **No LIMIT**: Add `LIMIT 100` or use `COUNT()` to prevent timeouts
 
-2. **Structure Errors**:
-   - ❌ Using WHERE for basic entity filtering
-   - ❌ Incorrectly placing direction arrows
-   - ❌ Referencing undefined aliases
-   - ❌ Using improper optional traversal syntax
+#### Common Patterns & Examples
 
-3. **No Results**
-    - ❌ No results may be expected, validate with the context of the query
-    - ❌ Use wildcard relationship (i.e. THAT RELATES TO)
-    - ❌ Confirm the property being filtered exists
-    - ❌ Confirm the value being used for the filtered property exists
-    - ❌ Never assume _type, _class, relationship verbs or properties, only use what has been found in discovery
+**Security Queries**:
+- Unencrypted data: `FIND DataStore WITH encrypted = false`
+- Users without MFA: `FIND User WITH mfaEnabled != true`
+- Critical findings: `FIND Finding WITH severity = "critical"`
 
-#### Query Development Process
+**Dashboard Queries**:
+- Pie chart: Return `name` and `value` pairs
+- Number chart: Return single `value`
+- Bar chart: Return `x` and `y` values
+- Table: Return named columns
 
-1. **Start with discovery queries** to understand the data model:
-   ```j1ql
-   FIND * AS ent RETURN ent._class, COUNT(ent)
-   ```
+**Rule Queries**:
+- New entities: Add time filter `WITH _createdOn > date.now - 1 day`
+- Always test with `execute-j1ql-query` first
+- Use condition: `["AND", ["queries.query0.total", ">", 0]]`
 
-2. **Examine specific entity properties**:
-   ```j1ql
-   FIND User AS ent RETURN ent.* LIMIT 100
-   ```
+#### Best Practices
 
-3. **Determine what and how the entity relates to other entities**:
-   ```j1ql
-   FIND User THAT RELATES TO AS rel * AS ent RETURN rel._class, ent._type, COUNT(ent)
-   ```
+1. **Always start with discovery** - Don't assume entity names or properties
+2. **Test incrementally** - Build complex queries step by step
+3. **Use this tool to validate** - Test every query before using in rules/widgets
+4. **Check error suggestions** - The tool provides specific fixes for common issues
+5. **Use proper syntax**:
+   - Single quotes for strings
+   - Alias AFTER WITH clause
+   - LIMIT to prevent timeouts
+   - Proper capitalization for classes
 
-4. **Incrementally build complexity**:
-   - Start with basic entity queries
-   - Add property filters
-   - Add relationship traversals
-   - Add specific return fields
-   - Add aggregations if needed
-   - Rinse and repeat until you have a query doing what you need
-   - IMPORTANT: Don't assume _type, _class, relationship verbs or properties, only use values found during discovery!
-
-5. **Troubleshoot by simplifying** - if a complex query fails, break it into smaller parts
-
-By following these strict guide `plines, AI agents can effectively create valid J1QL queries that provide accurate security insights across the organization's digital environment.
+**Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!
