@@ -16,7 +16,7 @@ import { loadDescription } from '../utils/load-description.js';
 import { J1QLValidator } from '../utils/j1ql-validator.js';
 
 export class JupiterOneMcpServer {
-  private server: McpServer;
+  public server: McpServer;
   private client: JupiterOneClient;
   private validator: J1QLValidator;
   private hasEnvironmentAccount: boolean;
