@@ -12,16 +12,9 @@ async function main() {
     const config: JupiterOneConfig = {
       apiKey: process.env.JUPITERONE_API_KEY || '',
       accountId: process.env.JUPITERONE_ACCOUNT_ID || '',
-      baseUrl: process.env.JUPITERONE_BASE_URL || 'https://graphql.us.jupiterone.io'
+      baseUrl: process.env.JUPITERONE_BASE_URL || 'https://graphql.us.jupiterone.io',
+      oauthToken: process.env.JUPITERONE_OAUTH_TOKEN || '',
     };
-
-    // Validate required fields
-    if (!config.apiKey) {
-      throw new Error('JUPITERONE_API_KEY environment variable is required');
-    }
-    if (!config.accountId) {
-      throw new Error('JUPITERONE_ACCOUNT_ID environment variable is required');
-    }
 
     // Create and start the MCP server
     const server = new JupiterOneMcpServer(config);

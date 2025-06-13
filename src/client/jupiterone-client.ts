@@ -9,6 +9,7 @@ import { J1qlService } from './services/j1ql-service.js';
 
 export class JupiterOneClient {
   private client: GraphQLClient;
+  private config: JupiterOneConfig;
   private alertService: AlertService;
   private ruleService: RuleService;
   private dashboardService: DashboardService;
@@ -17,12 +18,16 @@ export class JupiterOneClient {
   public j1qlService: J1qlService;
 
   constructor(config: JupiterOneConfig) {
+    this.config = config;
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${config.oauthToken || config.apiKey}`,
+      'Content-Type': 'application/json',
+    };
+    if (config.accountId) {
+      headers['LifeOmic-Account'] = config.accountId;
+    }
     this.client = new GraphQLClient(config.baseUrl || 'https://graphql.us.jupiterone.io', {
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
-        'LifeOmic-Account': config.accountId,
-      },
+      headers,
     });
 
     this.alertService = new AlertService(this.client);
@@ -31,6 +36,11 @@ export class JupiterOneClient {
     this.accountService = new AccountService(this.client);
     this.integrationService = new IntegrationService(this.client);
     this.j1qlService = new J1qlService(this.client);
+  }
+
+  public cloneWithAccountId(accountId: string): JupiterOneClient {
+    const newConfig = { ...this.config, accountId };
+    return new JupiterOneClient(newConfig);
   }
 
   // Alert methods
