@@ -197,8 +197,9 @@ export interface UpdateReferencedQuestionRuleInstanceInput
 
 // Configuration type
 export interface JupiterOneConfig {
-  apiKey: string;
-  accountId: string;
+  apiKey?: string;
+  accountId?: string;
+  oauthToken?: string;
   baseUrl?: string;
 }
 
