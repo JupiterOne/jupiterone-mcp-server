@@ -9,7 +9,7 @@ A Model Context Protocol (MCP) server that provides access to JupiterOne tools. 
 1. **JupiterOne Account**: You need an active JupiterOne account
 2. **API Key**: Generate an API key from your JupiterOne account settings
 3. **Account ID**: Your JupiterOne account identifier
-4. Working node installation with a version >= 18
+4. Working node installation with a version >= 18 (See https://nodejs.org/en/download and click one of the green buttons)
 
 ### Installation with Claude Desktop
 
