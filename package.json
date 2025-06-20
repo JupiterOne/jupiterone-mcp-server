@@ -7,7 +7,7 @@
     "jupiterone-mcp": "dist/index.js"
   },
   "scripts": {
-    "prebuild": "ts-node scripts/generate-descriptions.ts",
+    "prebuild": "npx tsx scripts/generate-descriptions.ts",
     "build": "npm run prebuild && tsc",
     "dev": "npm run build && npx nodemon --watch src --ext ts --ignore src/generated --exec 'npm run build'",
     "inspector": "npx dotenv -e .env -- npx @modelcontextprotocol/inspector node dist/index.js",
