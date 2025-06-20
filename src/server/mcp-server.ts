@@ -10,14 +10,16 @@ import {
   ConditionEvaluation,
   ActionEvaluation,
   ActionEvaluationDetails,
+  Query,
 } from '../types/jupiterone.js';
 import { loadDescription } from '../utils/load-description.js';
 import { J1QLValidator } from '../utils/j1ql-validator.js';
 
 export class JupiterOneMcpServer {
-  private server: McpServer;
+  public server: McpServer;
   private client: JupiterOneClient;
   private validator: J1QLValidator;
+  private hasEnvironmentAccount: boolean;
 
   constructor(config: JupiterOneConfig) {
     this.client = new JupiterOneClient(config);
@@ -26,22 +28,72 @@ export class JupiterOneMcpServer {
       name: 'jupiterone-mcp',
       version: '1.0.0',
     });
-
+    this.hasEnvironmentAccount = !config.accountId;
     this.setupTools();
+  }
+
+  private registerTool<T extends z.ZodRawShape>(options: {
+    name: string;
+    schema: T;
+    handler: (
+      params: z.infer<z.ZodObject<T>>,
+      client: JupiterOneClient,
+      validator: J1QLValidator
+    ) => Promise<any>;
+    description?: string;
+  }) {
+    const { name, schema, handler, description } = options;
+    let finalSchema: z.ZodRawShape = schema;
+    if (this.hasEnvironmentAccount) {
+      finalSchema = {
+        ...schema,
+        accountId: z
+          .string()
+          .describe(
+            'JupiterOne Account ID for this request. This should be explicitly asked for with the first tool call.'
+          ),
+      };
+    }
+    this.server.tool(name, description || '', finalSchema, async (params: any) => {
+      let client = this.client;
+      let toolParams = params;
+      let validator = this.validator;
+
+      if (this.hasEnvironmentAccount) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { accountId, ...otherParams } = params;
+        if (!accountId) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Error: accountId is required for this operation because no default JUPITERONE_ACCOUNT_ID is configured.',
+              },
+            ],
+            isError: true,
+          };
+        }
+        client = this.client.cloneWithAccountId(accountId);
+        validator = new J1QLValidator(client.j1qlService);
+        toolParams = otherParams;
+      }
+
+      return handler(toolParams, client, validator);
+    });
   }
 
   private setupTools(): void {
     // Tool: List all rules
-    this.server.tool(
-      'list-rules',
-      loadDescription('list-rules.md'),
-      {
+    this.registerTool({
+      name: 'list-rules',
+      description: loadDescription('list-rules.md'),
+      schema: {
         limit: z.number().min(1).max(1000).optional(),
         cursor: z.string().optional(),
       },
-      async ({ limit, cursor }) => {
+      handler: async ({ limit, cursor }, client) => {
         try {
-          const response = await this.client.listRuleInstances(limit, cursor);
+          const response = await client.listRuleInstances(limit, cursor);
           const instances = response.questionInstances || [];
 
           return {
@@ -84,18 +136,18 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get rule details
-    this.server.tool(
-      'get-rule-details',
-      {
+    this.registerTool({
+      name: 'get-rule-details',
+      schema: {
         ruleId: z.string(),
       },
-      async ({ ruleId }) => {
+      handler: async ({ ruleId }, client) => {
         try {
-          const instances = await this.client.getAllRuleInstances();
+          const instances = await client.getAllRuleInstances();
           const rule = instances.find((instance) => instance.id === ruleId);
 
           if (!rule) {
@@ -183,52 +235,56 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Test connection
-    this.server.tool('test-connection', {}, async () => {
-      try {
-        const isConnected = await this.client.testConnection();
-        const accountInfo = isConnected ? await this.client.getAccountInfo() : null;
+    this.registerTool({
+      name: 'test-connection',
+      schema: {},
+      handler: async (_, client) => {
+        try {
+          const isConnected = await client.testConnection();
+          const accountInfo = isConnected ? await client.getAccountInfo() : null;
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                {
-                  connected: isConnected,
-                  account: accountInfo,
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
-          isError: true,
-        };
-      }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    connected: isConnected,
+                    account: accountInfo,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      },
     });
 
     // Tool: Evaluate rule
-    this.server.tool(
-      'evaluate-rule',
-      {
+    this.registerTool({
+      name: 'evaluate-rule',
+      schema: {
         ruleId: z.string(),
       },
-      async ({ ruleId }) => {
+      handler: async ({ ruleId }, client) => {
         try {
-          const result = await this.client.evaluateRuleInstance(ruleId);
+          const result = await client.evaluateRuleInstance(ruleId);
 
           return {
             content: [
@@ -257,19 +313,19 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get active alerts
-    this.server.tool(
-      'get-active-alerts',
-      loadDescription('list-alerts.md'),
-      {
+    this.registerTool({
+      name: 'get-active-alerts',
+      description: loadDescription('list-alerts.md'),
+      schema: {
         limit: z.number().min(1).max(1000).optional(),
       },
-      async ({ limit }) => {
+      handler: async ({ limit }, client) => {
         try {
-          const instances = await this.client.getAllAlertInstances('ACTIVE');
+          const instances = await client.getAllAlertInstances('ACTIVE');
 
           if (!instances || !Array.isArray(instances)) {
             throw new Error('Invalid response from JupiterOne API: instances is not an array');
@@ -330,72 +386,76 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get dashboards
-    this.server.tool('get-dashboards', {}, async () => {
-      try {
-        const dashboards = await this.client.getDashboards();
+    this.registerTool({
+      name: 'get-dashboards',
+      schema: {},
+      handler: async (_, client) => {
+        try {
+          const dashboards = await client.getDashboards();
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(
-                {
-                  total: dashboards.length,
-                  dashboards: dashboards.map((dashboard) => ({
-                    id: dashboard.id,
-                    name: dashboard.name,
-                    category: dashboard.category,
-                    supportedUseCase: dashboard.supportedUseCase,
-                    isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
-                    resourceGroupId: dashboard.resourceGroupId,
-                    starred: dashboard.starred,
-                    lastUpdated: dashboard._timeUpdated,
-                    createdAt: dashboard._createdAt,
-                    prerequisites: dashboard.prerequisites
-                      ? {
-                          prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
-                          preRequisitesGroupsFulfilled:
-                            dashboard.prerequisites.preRequisitesGroupsFulfilled,
-                          preRequisitesGroupsRequired:
-                            dashboard.prerequisites.preRequisitesGroupsRequired,
-                        }
-                      : null,
-                  })),
-                },
-                null,
-                2
-              ),
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting dashboards: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
-          isError: true,
-        };
-      }
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify(
+                  {
+                    total: dashboards.length,
+                    dashboards: dashboards.map((dashboard) => ({
+                      id: dashboard.id,
+                      name: dashboard.name,
+                      category: dashboard.category,
+                      supportedUseCase: dashboard.supportedUseCase,
+                      isJ1ManagedBoard: dashboard.isJ1ManagedBoard,
+                      resourceGroupId: dashboard.resourceGroupId,
+                      starred: dashboard.starred,
+                      lastUpdated: dashboard._timeUpdated,
+                      createdAt: dashboard._createdAt,
+                      prerequisites: dashboard.prerequisites
+                        ? {
+                            prerequisitesMet: dashboard.prerequisites.prerequisitesMet,
+                            preRequisitesGroupsFulfilled:
+                              dashboard.prerequisites.preRequisitesGroupsFulfilled,
+                            preRequisitesGroupsRequired:
+                              dashboard.prerequisites.preRequisitesGroupsRequired,
+                          }
+                        : null,
+                    })),
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error getting dashboards: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      },
     });
 
     // Tool: Create dashboard
-    this.server.tool(
-      'create-dashboard',
-      loadDescription('create-dashboard.md'),
-      {
+    this.registerTool({
+      name: 'create-dashboard',
+      description: loadDescription('create-dashboard.md'),
+      schema: {
         name: z.string(),
         type: z.string(),
       },
-      async ({ name, type }) => {
+      handler: async ({ name, type }, client) => {
         try {
-          const result = await this.client.createDashboard({ name, type });
+          const result = await client.createDashboard({ name, type });
 
           return {
             content: [
@@ -424,18 +484,18 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get dashboard details
-    this.server.tool(
-      'get-dashboard-details',
-      {
+    this.registerTool({
+      name: 'get-dashboard-details',
+      schema: {
         dashboardId: z.string(),
       },
-      async ({ dashboardId }) => {
+      handler: async ({ dashboardId }, client) => {
         try {
-          const dashboard = await this.client.getDashboard(dashboardId);
+          const dashboard = await client.getDashboard(dashboardId);
 
           return {
             content: [
@@ -562,20 +622,20 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get integration definitions
-    this.server.tool(
-      'get-integration-definitions',
-      loadDescription('get-integration-definitions.md'),
-      {
+    this.registerTool({
+      name: 'get-integration-definitions',
+      description: loadDescription('get-integration-definitions.md'),
+      schema: {
         cursor: z.string().optional().describe('Optional cursor for pagination'),
         includeConfig: z.boolean().optional().describe('Whether to include configuration fields'),
       },
-      async ({ cursor, includeConfig }) => {
+      handler: async ({ cursor, includeConfig }, client) => {
         try {
-          const definitions = await this.client.getIntegrationDefinitions(cursor, includeConfig);
+          const definitions = await client.getIntegrationDefinitions(cursor, includeConfig);
 
           return {
             content: [
@@ -628,14 +688,14 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get integration instances
-    this.server.tool(
-      'get-integration-instances',
-      loadDescription('get-integration-instances.md'),
-      {
+    this.registerTool({
+      name: 'get-integration-instances',
+      description: loadDescription('get-integration-instances.md'),
+      schema: {
         definitionId: z
           .string()
           .optional()
@@ -647,13 +707,9 @@ export class JupiterOneMcpServer {
           .optional()
           .describe('Optional limit for number of instances to return'),
       },
-      async ({ definitionId, limit }) => {
+      handler: async ({ definitionId, limit }, client) => {
         try {
-          const instances = await this.client.getIntegrationInstances(
-            definitionId,
-            undefined,
-            limit
-          );
+          const instances = await client.getIntegrationInstances(definitionId, undefined, limit);
 
           return {
             content: [
@@ -705,13 +761,13 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get integration jobs
-    this.server.tool(
-      'get-integration-jobs',
-      {
+    this.registerTool({
+      name: 'get-integration-jobs',
+      schema: {
         status: z
           .enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'])
           .optional()
@@ -735,15 +791,12 @@ export class JupiterOneMcpServer {
           .optional()
           .describe('Optional size limit for number of jobs to return'),
       },
-      async ({
-        status,
-        integrationInstanceId,
-        integrationDefinitionId,
-        integrationInstanceIds,
-        size,
-      }) => {
+      handler: async (
+        { status, integrationInstanceId, integrationDefinitionId, integrationInstanceIds, size },
+        client
+      ) => {
         try {
-          const jobs = await this.client.getIntegrationJobs(
+          const jobs = await client.getIntegrationJobs(
             status,
             integrationInstanceId,
             integrationDefinitionId,
@@ -766,15 +819,8 @@ export class JupiterOneMcpServer {
                       createDate: job.createDate,
                       endDate: job.endDate,
                       hasSkippedSteps: job.hasSkippedSteps,
-                      integrationInstance: {
-                        id: job.integrationInstance.id,
-                        name: job.integrationInstance.name,
-                      },
-                      integrationDefinition: {
-                        id: job.integrationDefinition.id,
-                        title: job.integrationDefinition.title,
-                        integrationType: job.integrationDefinition.integrationType,
-                      },
+                      integrationInstance: job.integrationInstance,
+                      integrationDefinition: job.integrationDefinition,
                     })),
                     pageInfo: jobs.pageInfo,
                   },
@@ -795,14 +841,14 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Create inline question rule instance
-    this.server.tool(
-      'create-inline-question-rule',
-      loadDescription('create-inline-question-rule.md'),
-      {
+    this.registerTool({
+      name: 'create-inline-question-rule',
+      description: loadDescription('create-inline-question-rule.md'),
+      schema: {
         name: z.string().describe('Name of the rule'),
         description: z.string().describe('Description of the rule'),
         notifyOnFailure: z.boolean().optional().describe('Whether to notify on failure'),
@@ -830,26 +876,39 @@ export class JupiterOneMcpServer {
         specVersion: z.number().optional().describe('Specification version'),
         tags: z.array(z.string()).optional().describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).optional().describe('Template variables'),
-        queries: z
+        question: z
+          .object({
+            queries: z.array(
+              z.object({
+                query: z.string().describe('J1QL query string'),
+                name: z.string().describe('Name identifier for the query'),
+                version: z.string().optional().describe('Version of the query'),
+                includeDeleted: z.boolean().describe('Whether to include deleted entities'),
+              })
+            ),
+          })
+          .describe('Question configuration'),
+        labels: z
           .array(
             z.object({
-              query: z.string().describe('J1QL query string'),
-              name: z.string().describe('Name identifier for the query'),
-              version: z.string().optional().describe('Version of the query'),
-              includeDeleted: z
-                .boolean()
-                .optional()
-                .describe('Whether to include deleted entities'),
+              labelName: z.string(),
+              labelValue: z.string().nullable(),
             })
           )
-          .describe('J1QL queries that define what entities to match'),
+          .describe('Labels for the rule'),
         operations: z
           .array(
             z.object({
               when: z
                 .object({
                   type: z.literal('FILTER'),
-                  condition: z.array(z.any()).describe('Filter condition array'),
+                  condition: z
+                    .array(
+                      z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+                    )
+                    .describe(
+                      'Filter condition array (e.g., ["AND", ["queries.query0.total", ">", 0]])'
+                    ),
                 })
                 .describe('Condition that triggers the actions'),
               actions: z
@@ -916,23 +975,28 @@ export class JupiterOneMcpServer {
           )
           .describe('Operations to perform when conditions are met'),
       },
-      async ({
-        name,
-        description,
-        notifyOnFailure,
-        triggerActionsOnNewEntitiesOnly,
-        ignorePreviousResults,
-        pollingInterval,
-        outputs,
-        specVersion,
-        tags,
-        templates,
-        queries,
-        operations,
-      }) => {
+      handler: async (
+        {
+          name,
+          description,
+          notifyOnFailure,
+          triggerActionsOnNewEntitiesOnly,
+          ignorePreviousResults,
+          pollingInterval,
+          outputs,
+          specVersion,
+          labels,
+          tags,
+          templates,
+          question,
+          operations,
+        },
+        client,
+        validator
+      ) => {
         try {
           // Validate all queries before creating the rule
-          const validationResults = await this.validateQueries(queries);
+          const validationResults = await this.validateQueries(question.queries, validator);
           if (validationResults.length > 0) {
             return this.createValidationErrorResponse(validationResults);
           }
@@ -946,15 +1010,14 @@ export class JupiterOneMcpServer {
             pollingInterval,
             outputs,
             specVersion,
+            labels,
             tags,
             templates,
-            question: {
-              queries,
-            },
+            question,
             operations,
           };
 
-          const result = await this.client.createInlineQuestionRuleInstance(instance);
+          const result = await client.createInlineQuestionRuleInstance(instance);
 
           return {
             content: [
@@ -998,14 +1061,14 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Update inline question rule instance
-    this.server.tool(
-      'update-inline-question-rule',
-      loadDescription('update-inline-question-rule.md'),
-      {
+    this.registerTool({
+      name: 'update-inline-question-rule',
+      description: loadDescription('update-inline-question-rule.md'),
+      schema: {
         id: z.string().describe('ID of the rule to update'),
         name: z.string().describe('Name of the rule'),
         description: z.string().describe('Description of the rule'),
@@ -1028,7 +1091,6 @@ export class JupiterOneMcpServer {
           .describe('How frequently to evaluate the rule'),
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
         specVersion: z.number().describe('Specification version'),
-        version: z.number().describe('Version of the rule'),
         tags: z.array(z.string()).describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).describe('Template variables'),
         labels: z
@@ -1062,7 +1124,13 @@ export class JupiterOneMcpServer {
               when: z
                 .object({
                   type: z.literal('FILTER'),
-                  condition: z.array(z.any()).describe('Filter condition array'),
+                  condition: z
+                    .array(
+                      z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+                    )
+                    .describe(
+                      'Filter condition array (e.g., ["AND", ["queries.query0.total", ">", 0]])'
+                    ),
                 })
                 .describe('Condition that triggers the actions'),
               actions: z.array(
@@ -1127,28 +1195,31 @@ export class JupiterOneMcpServer {
           )
           .describe('Operations that define when and what actions to take'),
       },
-      async ({
-        id,
-        name,
-        description,
-        notifyOnFailure,
-        triggerActionsOnNewEntitiesOnly,
-        ignorePreviousResults,
-        pollingInterval,
-        outputs,
-        specVersion,
-        version,
-        tags,
-        templates,
-        labels,
-        resourceGroupId,
-        remediationSteps,
-        question,
-        operations,
-      }) => {
+      handler: async (
+        {
+          id,
+          name,
+          description,
+          notifyOnFailure,
+          triggerActionsOnNewEntitiesOnly,
+          ignorePreviousResults,
+          pollingInterval,
+          outputs,
+          specVersion,
+          tags,
+          templates,
+          labels,
+          resourceGroupId,
+          remediationSteps,
+          question,
+          operations,
+        },
+        client,
+        validator
+      ) => {
         try {
           // Validate all queries before updating the rule
-          const validationResults = await this.validateQueries(question?.queries);
+          const validationResults = await this.validateQueries(question?.queries, validator);
           if (validationResults.length > 0) {
             return this.createValidationErrorResponse(validationResults);
           }
@@ -1163,17 +1234,16 @@ export class JupiterOneMcpServer {
             pollingInterval,
             outputs,
             specVersion,
-            version,
+            labels,
             tags,
             templates,
-            labels,
             resourceGroupId,
             remediationSteps,
             question,
             operations,
           };
 
-          const result = await this.client.updateInlineQuestionRuleInstance(instance);
+          const result = await client.updateInlineQuestionRuleInstance(instance);
 
           return {
             content: [
@@ -1220,19 +1290,19 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Add get-integration-job tool
-    this.server.tool(
-      'get-integration-job',
-      {
+    this.registerTool({
+      name: 'get-integration-job',
+      schema: {
         integrationJobId: z.string().describe('ID of the job to get'),
         integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
       },
-      async ({ integrationJobId, integrationInstanceId }) => {
+      handler: async ({ integrationJobId, integrationInstanceId }, client) => {
         try {
-          const job = await this.client.getIntegrationJob(integrationJobId, integrationInstanceId);
+          const job = await client.getIntegrationJob(integrationJobId, integrationInstanceId);
           return {
             content: [
               {
@@ -1265,13 +1335,13 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Add get-integration-events tool
-    this.server.tool(
-      'get-integration-events',
-      {
+    this.registerTool({
+      name: 'get-integration-events',
+      schema: {
         jobId: z.string().describe('ID of the job to get events for'),
         integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
         cursor: z.string().optional().describe('Optional cursor for pagination'),
@@ -1282,9 +1352,9 @@ export class JupiterOneMcpServer {
           .optional()
           .describe('Optional size limit for number of events to return (1-1000)'),
       },
-      async ({ jobId, integrationInstanceId, cursor, size }) => {
+      handler: async ({ jobId, integrationInstanceId, cursor, size }, client) => {
         try {
-          const events = await this.client.getIntegrationEvents(
+          const events = await client.getIntegrationEvents(
             jobId,
             integrationInstanceId,
             cursor,
@@ -1324,22 +1394,22 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: List rule evaluations
-    this.server.tool(
-      'list-rule-evaluations',
-      {
+    this.registerTool({
+      name: 'list-rule-evaluations',
+      schema: {
         ruleId: z.string(),
         beginTimestamp: z.number().optional(),
         endTimestamp: z.number().optional(),
         limit: z.number().min(1).max(1000).optional(),
         tag: z.string().optional(),
       },
-      async ({ ruleId, beginTimestamp, endTimestamp, limit, tag }) => {
+      handler: async ({ ruleId, beginTimestamp, endTimestamp, limit, tag }, client) => {
         try {
-          const evaluations = await this.client.getAllRuleEvaluations({
+          const evaluations = await client.getAllRuleEvaluations({
             collectionType: 'RULE_EVALUATION',
             collectionOwnerId: ruleId,
             beginTimestamp: beginTimestamp || 0,
@@ -1383,19 +1453,19 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get rule evaluation details
-    this.server.tool(
-      'get-rule-evaluation-details',
-      {
+    this.registerTool({
+      name: 'get-rule-evaluation-details',
+      schema: {
         ruleId: z.string(),
         timestamp: z.number(),
       },
-      async ({ ruleId, timestamp }) => {
+      handler: async ({ ruleId, timestamp }, client) => {
         try {
-          const details = await this.client.getRuleEvaluationDetails({
+          const details = await client.getRuleEvaluationDetails({
             ruleInstanceId: ruleId,
             timestamp,
           });
@@ -1468,18 +1538,18 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get raw data download URL
-    this.server.tool(
-      'get-raw-data-download-url',
-      {
+    this.registerTool({
+      name: 'get-raw-data-download-url',
+      schema: {
         rawDataKey: z.string(),
       },
-      async ({ rawDataKey }) => {
+      handler: async ({ rawDataKey }, client) => {
         try {
-          const downloadUrl = await this.client.getRawDataDownloadUrl(rawDataKey);
+          const downloadUrl = await client.getRawDataDownloadUrl(rawDataKey);
 
           return {
             content: [
@@ -1507,18 +1577,18 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Get rule evaluation query results
-    this.server.tool(
-      'get-rule-evaluation-query-results',
-      {
+    this.registerTool({
+      name: 'get-rule-evaluation-query-results',
+      schema: {
         rawDataKey: z.string(),
       },
-      async ({ rawDataKey }) => {
+      handler: async ({ rawDataKey }, client) => {
         try {
-          const results = await this.client.getRawDataResults(rawDataKey);
+          const results = await client.getRawDataResults(rawDataKey);
           return {
             content: [
               {
@@ -1538,8 +1608,8 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // The server is not doing a great job of this, will uncomment when we have better support for this
     // Tool: Create J1QL from natural language
@@ -1587,14 +1657,14 @@ export class JupiterOneMcpServer {
     // );
 
     // Tool: Create dashboard widget
-    this.server.tool(
-      'create-dashboard-widget',
-      loadDescription('create-dashboard-widget.md'),
-      {
+    this.registerTool({
+      name: 'create-dashboard-widget',
+      description: loadDescription('create-dashboard-widget.md'),
+      schema: {
         dashboardId: z.string().describe('ID of the dashboard to add the widget to'),
         input: z.any().describe('Widget input object (CreateInsightsWidgetInput)'),
       },
-      async ({ dashboardId, input }) => {
+      handler: async ({ dashboardId, input }, client, validator) => {
         try {
           let widgetInput = input;
           if (typeof input === 'string') {
@@ -1606,12 +1676,15 @@ export class JupiterOneMcpServer {
           }
 
           // Validate queries before creating widget
-          const validationResults = await this.validateWidgetQueries(widgetInput.config?.queries);
+          const validationResults = await this.validateWidgetQueries(
+            widgetInput.config?.queries,
+            validator
+          );
           if (validationResults.length > 0) {
             return this.createValidationErrorResponse(validationResults);
           }
 
-          const widget = await this.client.createDashboardWidget(dashboardId, widgetInput);
+          const widget = await client.createDashboardWidget(dashboardId, widgetInput);
           return {
             content: [
               {
@@ -1631,14 +1704,14 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Update dashboard
-    this.server.tool(
-      'update-dashboard',
-      loadDescription('update-dashboard.md'),
-      {
+    this.registerTool({
+      name: 'update-dashboard',
+      description: loadDescription('update-dashboard.md'),
+      schema: {
         dashboardId: z.string().describe('ID of the dashboard to update'),
         layouts: z
           .object({
@@ -1710,9 +1783,9 @@ export class JupiterOneMcpServer {
           })
           .describe('Layouts object for the dashboard'),
       },
-      async ({ dashboardId, layouts }) => {
+      handler: async ({ dashboardId, layouts }, client) => {
         try {
-          const updated = await this.client.updateDashboard({ dashboardId, layouts });
+          const updated = await client.updateDashboard({ dashboardId, layouts });
           return {
             content: [
               {
@@ -1732,14 +1805,14 @@ export class JupiterOneMcpServer {
             isError: true,
           };
         }
-      }
-    );
+      },
+    });
 
     // Tool: Execute J1QL query
-    this.server.tool(
-      'execute-j1ql-query',
-      loadDescription('execute-j1ql-query.md'),
-      {
+    this.registerTool({
+      name: 'execute-j1ql-query',
+      description: loadDescription('execute-j1ql-query.md'),
+      schema: {
         query: z.string().describe('A J1QL query string that describes what data to return'),
         variables: z
           .record(z.any())
@@ -1763,22 +1836,18 @@ export class JupiterOneMcpServer {
           .optional()
           .describe('Array of filters that define the desired vertex'),
       },
-      async ({
-        query,
-        variables,
-        cursor,
-        includeDeleted,
-        deferredResponse,
-        flags,
-        scopeFilters,
-      }) => {
+      handler: async (
+        { query, variables, cursor, includeDeleted, deferredResponse, flags, scopeFilters },
+        client,
+        validator
+      ) => {
         try {
           // Build flags object
           const queryFlags = { ...flags };
           if (typeof includeDeleted === 'boolean') queryFlags.includeDeleted = includeDeleted;
           if (deferredResponse) queryFlags.deferredResponse = deferredResponse;
 
-          const result = await this.client.executeJ1qlQuery({
+          const result = await client.executeJ1qlQuery({
             query,
             variables,
             cursor,
@@ -1795,22 +1864,23 @@ export class JupiterOneMcpServer {
             ],
           };
         } catch (error) {
-          return this.createQueryErrorResponse(error, query);
+          return this.createQueryErrorResponse(error, query, validator);
         }
-      }
-    );
+      },
+    });
   }
 
   // Helper methods for validation
   private async validateQueries(
-    queries: any[]
+    queries: Query[],
+    validator: J1QLValidator
   ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
     if (!queries || !Array.isArray(queries)) return [];
 
     const validationResults = [];
     for (const queryObj of queries) {
       if (queryObj.query) {
-        const validation = await this.validator.validateQuery(queryObj.query);
+        const validation = await validator.validateQuery(queryObj.query);
         if (!validation.isValid) {
           validationResults.push({
             queryName: queryObj.name || 'Unnamed query',
@@ -1824,10 +1894,11 @@ export class JupiterOneMcpServer {
   }
 
   private async validateWidgetQueries(
-    queries: any[]
+    queries: any[],
+    validator: J1QLValidator
   ): Promise<Array<{ queryName: string; error: string; suggestion: string }>> {
     // Use the same validation logic as rules - actually execute the queries
-    return this.validateQueries(queries);
+    return this.validateQueries(queries, validator);
   }
 
   private createValidationErrorResponse(
@@ -1848,8 +1919,8 @@ export class JupiterOneMcpServer {
     };
   }
 
-  private createQueryErrorResponse(error: any, query: string) {
-    const errorResult = this.validator.handleQueryError(error, query);
+  private createQueryErrorResponse(error: any, query: string, validator: J1QLValidator) {
+    const errorResult = validator.handleQueryError(error, query);
 
     return {
       content: [

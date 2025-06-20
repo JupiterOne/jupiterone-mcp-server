@@ -1,10 +1,6 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
+// src/utils/load-description.ts
+import { descriptionMap } from '../generated/description-map.js';
 
 export function loadDescription(filename: string): string {
-  const filePath = join(__dirname, '..', 'descriptions', filename);
-  return readFileSync(filePath, 'utf-8');
+  return descriptionMap[filename] ?? '';
 }

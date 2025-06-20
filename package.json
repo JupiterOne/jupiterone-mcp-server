@@ -1,16 +1,16 @@
 {
   "name": "@jupiterone/jupiterone-mcp",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "description": "Model Context Protocol server for JupiterOne account rules and rule details",
-  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "jupiterone-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && npm run copy-descriptions",
-    "copy-descriptions": "cp -r src/descriptions dist/",
-    "dev": "npm run build && npx nodemon --watch src --ext ts --exec 'npm run build && npx dotenv -e .env -- npx @modelcontextprotocol/inspector node dist/index.js'",
+    "prebuild": "ts-node scripts/generate-descriptions.ts",
+    "build": "npm run prebuild && tsc",
+    "dev": "npm run build && npx nodemon --watch src --ext ts --ignore src/generated --exec 'npm run build'",
+    "inspector": "npx dotenv -e .env -- npx @modelcontextprotocol/inspector node dist/index.js",
     "start": "node dist/index.js",
     "test": "jest",
     "test-connection": "node test-connection.js",
