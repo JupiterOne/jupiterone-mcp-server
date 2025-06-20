@@ -876,26 +876,39 @@ export class JupiterOneMcpServer {
         specVersion: z.number().optional().describe('Specification version'),
         tags: z.array(z.string()).optional().describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).optional().describe('Template variables'),
-        queries: z
+        question: z
+          .object({
+            queries: z.array(
+              z.object({
+                query: z.string().describe('J1QL query string'),
+                name: z.string().describe('Name identifier for the query'),
+                version: z.string().optional().describe('Version of the query'),
+                includeDeleted: z.boolean().describe('Whether to include deleted entities'),
+              })
+            ),
+          })
+          .describe('Question configuration'),
+        labels: z
           .array(
             z.object({
-              query: z.string().describe('J1QL query string'),
-              name: z.string().describe('Name identifier for the query'),
-              version: z.string().optional().describe('Version of the query'),
-              includeDeleted: z
-                .boolean()
-                .optional()
-                .describe('Whether to include deleted entities'),
+              labelName: z.string(),
+              labelValue: z.string().nullable(),
             })
           )
-          .describe('J1QL queries that define what entities to match'),
+          .describe('Labels for the rule'),
         operations: z
           .array(
             z.object({
               when: z
                 .object({
                   type: z.literal('FILTER'),
-                  condition: z.array(z.any()).describe('Filter condition array'),
+                  condition: z
+                    .array(
+                      z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+                    )
+                    .describe(
+                      'Filter condition array (e.g., ["AND", ["queries.query0.total", ">", 0]])'
+                    ),
                 })
                 .describe('Condition that triggers the actions'),
               actions: z
@@ -972,9 +985,10 @@ export class JupiterOneMcpServer {
           pollingInterval,
           outputs,
           specVersion,
+          labels,
           tags,
           templates,
-          queries,
+          question,
           operations,
         },
         client,
@@ -982,7 +996,7 @@ export class JupiterOneMcpServer {
       ) => {
         try {
           // Validate all queries before creating the rule
-          const validationResults = await this.validateQueries(queries, validator);
+          const validationResults = await this.validateQueries(question.queries, validator);
           if (validationResults.length > 0) {
             return this.createValidationErrorResponse(validationResults);
           }
@@ -996,11 +1010,10 @@ export class JupiterOneMcpServer {
             pollingInterval,
             outputs,
             specVersion,
+            labels,
             tags,
             templates,
-            question: {
-              queries,
-            },
+            question,
             operations,
           };
 
@@ -1078,7 +1091,6 @@ export class JupiterOneMcpServer {
           .describe('How frequently to evaluate the rule'),
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
         specVersion: z.number().describe('Specification version'),
-        version: z.number().describe('Version of the rule'),
         tags: z.array(z.string()).describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).describe('Template variables'),
         labels: z
@@ -1112,7 +1124,13 @@ export class JupiterOneMcpServer {
               when: z
                 .object({
                   type: z.literal('FILTER'),
-                  condition: z.array(z.any()).describe('Filter condition array'),
+                  condition: z
+                    .array(
+                      z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))])
+                    )
+                    .describe(
+                      'Filter condition array (e.g., ["AND", ["queries.query0.total", ">", 0]])'
+                    ),
                 })
                 .describe('Condition that triggers the actions'),
               actions: z.array(
@@ -1188,7 +1206,6 @@ export class JupiterOneMcpServer {
           pollingInterval,
           outputs,
           specVersion,
-          version,
           tags,
           templates,
           labels,
@@ -1217,10 +1234,9 @@ export class JupiterOneMcpServer {
             pollingInterval,
             outputs,
             specVersion,
-            version,
+            labels,
             tags,
             templates,
-            labels,
             resourceGroupId,
             remediationSteps,
             question,
