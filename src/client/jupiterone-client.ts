@@ -22,6 +22,7 @@ export class JupiterOneClient {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${config.oauthToken || config.apiKey}`,
       'Content-Type': 'application/json',
+      'User-Agent': 'jupiterone-mcp/0.0.6',
     };
     if (config.accountId) {
       headers['LifeOmic-Account'] = config.accountId;
