@@ -17,6 +17,15 @@ export class DashboardService {
   constructor(private client: GraphQLClient) {}
 
   /**
+   * Construct dashboard URL based on subdomain
+   */
+  constructDashboardUrl(dashboardId: string, subdomain?: string): string {
+    // Default to 'j1' if no subdomain provided
+    const accountSubdomain = subdomain || 'j1';
+    return `https://${accountSubdomain}.apps.us.jupiterone.io/insights/dashboards/${dashboardId}`;
+  }
+
+  /**
    * Get all dashboards
    */
   async getDashboards(): Promise<Dashboard[]> {

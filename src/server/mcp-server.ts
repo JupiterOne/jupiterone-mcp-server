@@ -456,6 +456,13 @@ export class JupiterOneMcpServer {
       handler: async ({ name, type }, client) => {
         try {
           const result = await client.createDashboard({ name, type });
+          
+          // Get account info to construct the URL
+          const accountInfo = await client.getAccountInfo();
+          const dashboardUrl = client.dashboardService.constructDashboardUrl(
+            result.id,
+            accountInfo.subdomain
+          );
 
           return {
             content: [
@@ -466,6 +473,7 @@ export class JupiterOneMcpServer {
                     id: result.id,
                     name,
                     type,
+                    url: dashboardUrl,
                   },
                   null,
                   2
@@ -1018,6 +1026,13 @@ export class JupiterOneMcpServer {
           };
 
           const result = await client.createInlineQuestionRuleInstance(instance);
+          
+          // Get account info to construct the URL
+          const accountInfo = await client.getAccountInfo();
+          const ruleUrl = client.ruleService.constructRuleUrl(
+            result.id,
+            accountInfo.subdomain
+          );
 
           return {
             content: [
@@ -1042,6 +1057,7 @@ export class JupiterOneMcpServer {
                       operations: result.operations,
                       latestAlertId: result.latestAlertId,
                       latestAlertIsActive: result.latestAlertIsActive,
+                      url: ruleUrl,
                     },
                   },
                   null,
@@ -1244,6 +1260,13 @@ export class JupiterOneMcpServer {
           };
 
           const result = await client.updateInlineQuestionRuleInstance(instance);
+          
+          // Get account info to construct the URL
+          const accountInfo = await client.getAccountInfo();
+          const ruleUrl = client.ruleService.constructRuleUrl(
+            result.id,
+            accountInfo.subdomain
+          );
 
           return {
             content: [
@@ -1271,6 +1294,7 @@ export class JupiterOneMcpServer {
                       latestAlertIsActive: result.latestAlertIsActive,
                       resourceGroupId: result.resourceGroupId,
                       remediationSteps: result.remediationSteps,
+                      url: ruleUrl,
                     },
                   },
                   null,
@@ -1685,11 +1709,22 @@ export class JupiterOneMcpServer {
           }
 
           const widget = await client.createDashboardWidget(dashboardId, widgetInput);
+          
+          // Get account info to construct the dashboard URL
+          const accountInfo = await client.getAccountInfo();
+          const dashboardUrl = client.dashboardService.constructDashboardUrl(
+            dashboardId,
+            accountInfo.subdomain
+          );
+          
           return {
             content: [
               {
                 type: 'text' as const,
-                text: JSON.stringify(widget, null, 2),
+                text: JSON.stringify({
+                  ...widget,
+                  dashboardUrl
+                }, null, 2),
               },
             ],
           };

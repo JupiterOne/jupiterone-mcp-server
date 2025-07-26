@@ -11,8 +11,8 @@ export class JupiterOneClient {
   private client: GraphQLClient;
   private config: JupiterOneConfig;
   private alertService: AlertService;
-  private ruleService: RuleService;
-  private dashboardService: DashboardService;
+  public ruleService: RuleService;
+  public dashboardService: DashboardService;
   private accountService: AccountService;
   private integrationService: IntegrationService;
   public j1qlService: J1qlService;
