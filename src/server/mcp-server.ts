@@ -142,6 +142,7 @@ export class JupiterOneMcpServer {
     // Tool: Get rule details
     this.registerTool({
       name: 'get-rule-details',
+      description: loadDescription('get-rule-details.md'),
       schema: {
         ruleId: z.string(),
       },
@@ -241,6 +242,7 @@ export class JupiterOneMcpServer {
     // Tool: Test connection
     this.registerTool({
       name: 'test-connection',
+      description: loadDescription('test-connection.md'),
       schema: {},
       handler: async (_, client) => {
         try {
@@ -279,6 +281,7 @@ export class JupiterOneMcpServer {
     // Tool: Evaluate rule
     this.registerTool({
       name: 'evaluate-rule',
+      description: loadDescription('evaluate-rule.md'),
       schema: {
         ruleId: z.string(),
       },
@@ -392,6 +395,7 @@ export class JupiterOneMcpServer {
     // Tool: Get dashboards
     this.registerTool({
       name: 'get-dashboards',
+      description: loadDescription('get-dashboards.md'),
       schema: {},
       handler: async (_, client) => {
         try {
@@ -498,6 +502,7 @@ export class JupiterOneMcpServer {
     // Tool: Get dashboard details
     this.registerTool({
       name: 'get-dashboard-details',
+      description: loadDescription('get-dashboard-details.md'),
       schema: {
         dashboardId: z.string(),
       },
@@ -775,6 +780,7 @@ export class JupiterOneMcpServer {
     // Tool: Get integration jobs
     this.registerTool({
       name: 'get-integration-jobs',
+      description: loadDescription('get-integration-jobs.md'),
       schema: {
         status: z
           .enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'])
@@ -1320,6 +1326,7 @@ export class JupiterOneMcpServer {
     // Add get-integration-job tool
     this.registerTool({
       name: 'get-integration-job',
+      description: loadDescription('get-integration-job.md'),
       schema: {
         integrationJobId: z.string().describe('ID of the job to get'),
         integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
@@ -1365,6 +1372,7 @@ export class JupiterOneMcpServer {
     // Add get-integration-events tool
     this.registerTool({
       name: 'get-integration-events',
+      description: loadDescription('get-integration-events.md'),
       schema: {
         jobId: z.string().describe('ID of the job to get events for'),
         integrationInstanceId: z.string().describe('ID of the instance the job belongs to'),
@@ -1424,6 +1432,7 @@ export class JupiterOneMcpServer {
     // Tool: List rule evaluations
     this.registerTool({
       name: 'list-rule-evaluations',
+      description: loadDescription('list-rule-evaluations.md'),
       schema: {
         ruleId: z.string(),
         beginTimestamp: z.number().optional(),
@@ -1483,6 +1492,7 @@ export class JupiterOneMcpServer {
     // Tool: Get rule evaluation details
     this.registerTool({
       name: 'get-rule-evaluation-details',
+      description: loadDescription('get-rule-evaluation-details.md'),
       schema: {
         ruleId: z.string(),
         timestamp: z.number(),
@@ -1568,6 +1578,7 @@ export class JupiterOneMcpServer {
     // Tool: Get raw data download URL
     this.registerTool({
       name: 'get-raw-data-download-url',
+      description: loadDescription('get-raw-data-download-url.md'),
       schema: {
         rawDataKey: z.string(),
       },
@@ -1607,6 +1618,7 @@ export class JupiterOneMcpServer {
     // Tool: Get rule evaluation query results
     this.registerTool({
       name: 'get-rule-evaluation-query-results',
+      description: loadDescription('get-rule-evaluation-query-results.md'),
       schema: {
         rawDataKey: z.string(),
       },
