@@ -413,3 +413,4 @@ Based on confirmed working examples, use this template:
 - When users request tagging functionality, use the `labels` field with key-value pairs
 
 This format ensures reliable rule creation and helps avoid common pitfalls encountered during rule development.
+After creating a rule, you should include the rule's url in your message to the user.

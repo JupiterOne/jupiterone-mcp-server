@@ -7,14 +7,15 @@ export class AccountService {
   /**
    * Get account information
    */
-  async getAccountInfo(): Promise<{ accountId: string; name?: string }> {
+  async getAccountInfo(): Promise<{ accountId: string; name?: string; subdomain?: string }> {
     try {
       const response = await this.client.request<{
-        iamGetAccount: { accountId: string; accountName?: string };
+        iamGetAccount: { accountId: string; accountName?: string; accountSubdomain?: string };
       }>(GET_ACCOUNT_INFO);
       return {
         accountId: response.iamGetAccount.accountId,
         name: response.iamGetAccount.accountName,
+        subdomain: response.iamGetAccount.accountSubdomain,
       };
     } catch (error) {
       console.error('Error getting account info', error);

@@ -12,9 +12,19 @@ import {
   CREATE_DASHBOARD_WIDGET,
   PATCH_DASHBOARD,
 } from '../graphql/mutations.js';
+import { getEnv } from '../../utils/getEnv.js';
 
 export class DashboardService {
   constructor(private client: GraphQLClient) {}
+
+  /**
+   * Construct dashboard URL based on subdomain
+   */
+  constructDashboardUrl(dashboardId: string, subdomain?: string): string {
+    // Default to 'j1' if no subdomain provided
+    const accountSubdomain = subdomain || 'j1';
+    return `https://${accountSubdomain}.apps.${getEnv()}.jupiterone.io/insights/dashboards/${dashboardId}`;
+  }
 
   /**
    * Get all dashboards

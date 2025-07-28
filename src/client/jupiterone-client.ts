@@ -1,18 +1,19 @@
 import { GraphQLClient } from 'graphql-request';
-import { JupiterOneConfig } from '../types/jupiterone.js';
+import type { JupiterOneConfig } from '../types/jupiterone.js';
 import { AlertService } from './services/alert-service.js';
 import { RuleService } from './services/rule-service.js';
 import { DashboardService } from './services/dashboard-service.js';
 import { AccountService } from './services/account-service.js';
 import { IntegrationService } from './services/integration-service.js';
 import { J1qlService } from './services/j1ql-service.js';
+import { version } from '../../package.json';
 
 export class JupiterOneClient {
   private client: GraphQLClient;
   private config: JupiterOneConfig;
   private alertService: AlertService;
-  private ruleService: RuleService;
-  private dashboardService: DashboardService;
+  public ruleService: RuleService;
+  public dashboardService: DashboardService;
   private accountService: AccountService;
   private integrationService: IntegrationService;
   public j1qlService: J1qlService;
@@ -22,6 +23,7 @@ export class JupiterOneClient {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${config.oauthToken || config.apiKey}`,
       'Content-Type': 'application/json',
+      'User-Agent': `jupiterone-mcp/${version}`,
     };
     if (config.accountId) {
       headers['LifeOmic-Account'] = config.accountId;

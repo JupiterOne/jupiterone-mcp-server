@@ -325,7 +325,8 @@ The markdown chart/widget allows you to display custom Markdown content directly
 \`\`\`
 
 ---
-`,
+
+After creating a widget you should include the dashboard url in your response to the user.`,
   "create-dashboard.md": `# Create Dashboard Tool
 
 Creates a new dashboard in JupiterOne. This tool is simple and self-descriptive: provide a name and a type to create a dashboard. Unless specified otherwise, default to creating personal dashboards.
@@ -337,7 +338,9 @@ export enum DashboardType {
   USER = 'User',
   ACCOUNT = 'Account',
 }
-\`\`\``,
+\`\`\`
+
+After creating a dashboard, you should include the dashboard's url in your response to the user.`,
   "create-inline-question-rule.md": `# JupiterOne Rule Creation Tool - Complete Guide
 
 **Purpose**: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
@@ -753,6 +756,7 @@ Based on confirmed working examples, use this template:
 - When users request tagging functionality, use the \`labels\` field with key-value pairs
 
 This format ensures reliable rule creation and helps avoid common pitfalls encountered during rule development.
+After creating a rule, you should include the rule's url in your message to the user.
 `,
   "create-j1ql-from-natural-language.md": `# JupiterOne Natural Language to J1QL Converter
 
@@ -761,6 +765,20 @@ Unless the user gives a specific query to run, this should always be used for de
 - Queries for rules
 - Queries for widgets
 - Queries to answer a user's question regarding their data in jupiterone`,
+  "evaluate-rule.md": `# Evaluate Rule Tool
+
+Manually trigger the evaluation of a JupiterOne alert rule. This tool forces an immediate evaluation of the rule's conditions and returns the results.
+
+## Parameters
+- \`ruleId\` (required): The unique identifier of the rule to evaluate
+
+## Example Usage
+Evaluate a specific rule:
+\`\`\`json
+{
+  "ruleId": "12345678-1234-1234-1234-123456789abc"
+}
+\`\`\``,
   "execute-j1ql-query.md": `# JupiterOne J1QL Query Executor
 
 **Purpose**: Executes JupiterOne Query Language (J1QL) queries against your JupiterOne data and returns the results. This tool is used to directly run J1QL queries that have been created, either manually or through the natural language converter.
@@ -1140,6 +1158,32 @@ Before running any J1QL query, verify:
    - Proper capitalization for classes
 
 **Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!`,
+  "get-dashboard-details.md": `# Get Dashboard Details Tool
+
+Get detailed information about a specific JupiterOne dashboard including its widgets, layout, and configuration.
+
+## Parameters
+- \`dashboardId\` (required): The unique identifier of the dashboard to retrieve
+
+## Example Usage
+Get details of a specific dashboard:
+\`\`\`json
+{
+  "dashboardId": "95936c1a-468a-494f-b11d-b134ac9b9577"
+}
+\`\`\``,
+  "get-dashboards.md": `# Get Dashboards Tool
+
+List all dashboards available in your JupiterOne account. This tool returns both personal and account-level dashboards with their metadata.
+
+## Parameters
+None required.
+
+## Example Usage
+Get all dashboards:
+\`\`\`json
+{}
+\`\`\``,
   "get-integration-definitions.md": `# Get Integration Definitions Tool
 
 Get all available integration definitions in your JupiterOne account. This tool returns a list of integration definitions that can be used to create integration instances. Integration definitions define the types of integrations available (like AWS, Azure, GitHub, etc.) and their configuration requirements. If a user is needing a specific integration instance id for something such as a rule action, you will want to start here and then use the \`get-integration-instances\` tool. Each integration definition will have a Name and a Title field, you should use this to identify which definition is correct for what the user is looking for. As an example, if the user wants to send a slack notification as a part of a rule action, you would want to pull all of the integration definitions and find any that have Slack in the name and/or title. If there are multiple, then clarify the differences to the user and allow them to guide you on which one is correct.
@@ -1165,6 +1209,25 @@ Get the next page of integration definitions using a cursor:
 \`\`\`json
 {
   "cursor": "cursor_here"
+}
+\`\`\``,
+  "get-integration-events.md": `# Get Integration Events Tool
+
+Get events and logs from a specific integration job execution. This tool provides detailed execution logs for troubleshooting integration issues.
+
+## Parameters
+- \`jobId\` (required): The ID of the job to get events for
+- \`integrationInstanceId\` (required): The ID of the instance the job belongs to
+- \`size\` (optional): Maximum number of events to return (1-1000)
+- \`cursor\` (optional): Pagination cursor for fetching additional events
+
+## Example Usage
+Get events for a specific job:
+\`\`\`json
+{
+  "jobId": "job-123",
+  "integrationInstanceId": "instance-456",
+  "size": 50
 }
 \`\`\``,
   "get-integration-instances.md": `# Get Integration Instances Tool
@@ -1202,6 +1265,105 @@ Get the first 5 instances of a specific integration type:
   "limit": 5
 }
 \`\`\``,
+  "get-integration-job.md": `# Get Integration Job Tool
+
+Get detailed information about a specific integration job execution.
+
+## Parameters
+- \`integrationJobId\` (required): The ID of the job to retrieve
+- \`integrationInstanceId\` (required): The ID of the instance the job belongs to
+
+## Example Usage
+Get details of a specific integration job:
+\`\`\`json
+{
+  "integrationJobId": "job-123",
+  "integrationInstanceId": "instance-456"
+}
+\`\`\``,
+  "get-integration-jobs.md": `# Get Integration Jobs Tool
+
+List integration job execution history. This tool returns information about integration runs including their status, timing, and results.
+
+## Parameters
+- \`integrationDefinitionId\` (optional): Filter jobs by definition ID
+- \`integrationInstanceId\` (optional): Filter jobs by instance ID
+- \`integrationInstanceIds\` (optional): Array of instance IDs to filter jobs
+- \`status\` (optional): Filter by job status (PENDING, RUNNING, COMPLETED, FAILED, CANCELLED)
+- \`size\` (optional): Maximum number of jobs to return (1-1000)
+
+## Example Usage
+Get all integration jobs:
+\`\`\`json
+{}
+\`\`\`
+
+Get jobs for a specific integration instance:
+\`\`\`json
+{
+  "integrationInstanceId": "abc123",
+  "status": "FAILED",
+  "size": 10
+}
+\`\`\``,
+  "get-raw-data-download-url.md": `# Get Raw Data Download URL Tool
+
+Generate a signed URL for downloading raw data from JupiterOne. This is typically used to download large result sets from rule evaluations.
+
+## Parameters
+- \`rawDataKey\` (required): The key identifying the raw data to download
+
+## Example Usage
+Get download URL for raw data:
+\`\`\`json
+{
+  "rawDataKey": "data-key-123"
+}
+\`\`\``,
+  "get-rule-details.md": `# Get Rule Details Tool
+
+Get detailed information about a specific JupiterOne alert rule by its ID. This tool returns comprehensive rule configuration including queries, conditions, actions, and metadata.
+
+## Parameters
+- \`ruleId\` (required): The unique identifier of the rule to retrieve
+
+## Example Usage
+Request the details of a specific rule:
+\`\`\`json
+{
+  "ruleId": "12345678-1234-1234-1234-123456789abc"
+}
+\`\`\``,
+  "get-rule-evaluation-details.md": `# Get Rule Evaluation Details Tool
+
+Get detailed information about a specific rule evaluation including query results and any generated alerts.
+
+## Parameters
+- \`ruleId\` (required): The ID of the rule
+- \`timestamp\` (required): The timestamp of the evaluation to retrieve (Unix timestamp)
+
+## Example Usage
+Get details of a specific rule evaluation:
+\`\`\`json
+{
+  "ruleId": "rule-123",
+  "timestamp": 1641024000000
+}
+\`\`\``,
+  "get-rule-evaluation-query-results.md": `# Get Rule Evaluation Query Results Tool
+
+Retrieve the actual query results from a rule evaluation. This tool fetches the entities that matched the rule's query conditions.
+
+## Parameters
+- \`rawDataKey\` (required): The key identifying the query results to retrieve
+
+## Example Usage
+Get query results from a rule evaluation:
+\`\`\`json
+{
+  "rawDataKey": "results-key-123"
+}
+\`\`\``,
   "list-alerts.md": `# List Alerts Tool
 
 List all currently active alerts in your JupiterOne account. This tool returns a list of active alert instances, including their IDs, names, descriptions, levels, statuses, timestamps, and related rule information. You can optionally specify a limit to restrict the number of alerts returned. If a user is looking for configuration behind an alert, then list out the rules or get the details of the rule associated with an alert. If they are looking for alert data or then use this tool rather than listing rules.
@@ -1214,6 +1376,25 @@ Request the first 5 active alerts:
 \`\`\`json
 {
   "limit": 5
+}
+\`\`\``,
+  "list-rule-evaluations.md": `# List Rule Evaluations Tool
+
+List the evaluation history for a specific rule. This tool shows when a rule was evaluated and the results of each evaluation.
+
+## Parameters
+- \`ruleId\` (required): The ID of the rule to get evaluations for
+- \`beginTimestamp\` (optional): Start time for the evaluation period (Unix timestamp)
+- \`endTimestamp\` (optional): End time for the evaluation period (Unix timestamp)
+- \`limit\` (optional): Maximum number of evaluations to return (1-1000)
+- \`tag\` (optional): Filter evaluations by tag
+
+## Example Usage
+Get recent evaluations for a rule:
+\`\`\`json
+{
+  "ruleId": "rule-123",
+  "limit": 10
 }
 \`\`\``,
   "list-rules.md": `# List Rules Tool
@@ -1269,6 +1450,18 @@ To get all rules across multiple pages:
 2. Check if \`pageInfo.hasNextPage\` is true
 3. If true, call again with \`cursor\` set to \`pageInfo.endCursor\`
 4. Repeat until \`hasNextPage\` is false`,
+  "test-connection.md": `# Test Connection Tool
+
+Test the connection to JupiterOne API and verify authentication credentials. This tool validates that the MCP server can successfully communicate with JupiterOne.
+
+## Parameters
+None required.
+
+## Example Usage
+Test the connection:
+\`\`\`json
+{}
+\`\`\``,
   "update-dashboard.md": `Patch an existing dashboard's layout configuration. This tool is primarily used for modifying the layout of widgets on a dashboard after they have been created.
 You will always want to call this after creating a dashboard and all its widgets so you can give a favorable layout to the user. Widgets should always have a size specified.
 The layout configuration is organized by screen breakpoint sizes (xs, sm, md, lg, xl) and includes positioning information for each widget. Each layout item contains:

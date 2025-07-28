@@ -29,9 +29,19 @@ import {
   DELETE_RULE,
   EVALUATE_RULE,
 } from '../graphql/mutations.js';
+import { getEnv } from '../../utils/getEnv.js';
 
 export class RuleService {
   constructor(private client: GraphQLClient) {}
+
+  /**
+   * Construct rule URL based on subdomain
+   */
+  constructRuleUrl(ruleId: string, subdomain?: string): string {
+    // Default to 'j1' if no subdomain provided
+    const accountSubdomain = subdomain || 'j1';
+    return `https://${accountSubdomain}.apps.${getEnv()}.jupiterone.io/alerts/rules/${ruleId}`;
+  }
 
   /**
    * List rule instances using the new GraphQL query
