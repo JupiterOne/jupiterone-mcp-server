@@ -10,3 +10,5 @@ export enum DashboardType {
   ACCOUNT = 'Account',
 }
 ```
+
+After creating a dashboard, you should include the dashboard's url in your response to the user.

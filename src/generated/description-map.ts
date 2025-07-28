@@ -325,7 +325,8 @@ The markdown chart/widget allows you to display custom Markdown content directly
 \`\`\`
 
 ---
-`,
+
+After creating a widget you should include the dashboard url in your response to the user.`,
   "create-dashboard.md": `# Create Dashboard Tool
 
 Creates a new dashboard in JupiterOne. This tool is simple and self-descriptive: provide a name and a type to create a dashboard. Unless specified otherwise, default to creating personal dashboards.
@@ -337,7 +338,9 @@ export enum DashboardType {
   USER = 'User',
   ACCOUNT = 'Account',
 }
-\`\`\``,
+\`\`\`
+
+After creating a dashboard, you should include the dashboard's url in your response to the user.`,
   "create-inline-question-rule.md": `# JupiterOne Rule Creation Tool - Complete Guide
 
 **Purpose**: Creates inline question-based alert rules in JupiterOne to monitor entities and trigger alerts based on specified conditions.
@@ -753,6 +756,7 @@ Based on confirmed working examples, use this template:
 - When users request tagging functionality, use the \`labels\` field with key-value pairs
 
 This format ensures reliable rule creation and helps avoid common pitfalls encountered during rule development.
+After creating a rule, you should include the rule's url in your message to the user.
 `,
   "create-j1ql-from-natural-language.md": `# JupiterOne Natural Language to J1QL Converter
 

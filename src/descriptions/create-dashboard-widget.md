@@ -323,3 +323,5 @@ The markdown chart/widget allows you to display custom Markdown content directly
 ```
 
 ---
+
+After creating a widget you should include the dashboard url in your response to the user.
