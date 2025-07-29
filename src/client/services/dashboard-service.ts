@@ -21,9 +21,11 @@ export class DashboardService {
    * Construct dashboard URL based on subdomain
    */
   constructDashboardUrl(dashboardId: string, subdomain?: string): string {
-    // Default to 'j1' if no subdomain provided
-    const accountSubdomain = subdomain || 'j1';
-    return `https://${accountSubdomain}.apps.${getEnv()}.jupiterone.io/insights/dashboards/${dashboardId}`;
+    const environment = getEnv();
+    if (!subdomain || !environment) {
+      return '';
+    }
+    return `https://${subdomain}.apps.${environment}.jupiterone.io/insights/dashboards/${dashboardId}`;
   }
 
   /**
