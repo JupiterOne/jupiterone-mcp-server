@@ -39,3 +39,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: npm publish --access public
+
+      - name: Trigger remote-mcp deployment
+        if: steps.pkg.outputs.version != steps.published.outputs.published_version
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: JupiterOne/jupiterone-remote-mcp
+          event-type: npm-package-published
+          client-payload: '{"package": "@jupiterone/jupiterone-mcp", "version": "${{ steps.pkg.outputs.version }}"}'

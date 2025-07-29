@@ -248,6 +248,10 @@ export class JupiterOneMcpServer {
         try {
           const isConnected = await client.testConnection();
           const accountInfo = isConnected ? await client.getAccountInfo() : null;
+          
+          // Get package version
+          const packageJson = require('../../package.json');
+          const version = packageJson.version;
 
           return {
             content: [
@@ -257,6 +261,7 @@ export class JupiterOneMcpServer {
                   {
                     connected: isConnected,
                     account: accountInfo,
+                    version: version,
                   },
                   null,
                   2
