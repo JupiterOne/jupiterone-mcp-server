@@ -1,10 +1,12 @@
 export const getEnv = () => {
   try {
-    const baseUrl = process.env.JUPITERONE_BASE_URL || 'https://graphql.dev.jupiterone.io';
-    const env = baseUrl.split('graphql.')[1].split('.')[0];
-    return env || 'us';
+    const baseUrl = process.env.JUPITERONE_BASE_URL;
+    if (!baseUrl) {
+      return undefined;
+    }
+    const env = baseUrl.split('graphql.')[1]?.split('.')[0];
+    return env || undefined;
   } catch (error) {
-    console.error('Error getting environment:', error);
-    return 'us';
+    return undefined;
   }
 };
