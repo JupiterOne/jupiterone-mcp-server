@@ -181,3 +181,9 @@ Replace the placeholder values with your actual JupiterOne credentials:
 | Tool | Description | Parameters |
 |------|-------------|------------|
 | `execute-j1ql-query` | Execute a J1QL query | `query`, `variables` (optional), `cursor` (optional), `includeDeleted` (optional), `deferredResponse` (optional), `flags` (optional), `scopeFilters` (optional) |
+
+## Deployment
+
+This package is automatically published to npm when changes are merged to the main branch. The JupiterOne Remote MCP server is configured to automatically deploy when patch versions (e.g., 0.0.8 → 0.0.9) are published.
+
+**Note**: Minor and major version updates (e.g., 0.0.x → 0.1.0 or 0.x.x → 1.0.0) require manual updates to the Remote MCP server's dependencies.
