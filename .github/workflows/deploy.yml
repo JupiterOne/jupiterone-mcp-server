@@ -44,7 +44,7 @@ jobs:
         if: steps.pkg.outputs.version != steps.published.outputs.published_version
         uses: peter-evans/repository-dispatch@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.E2E_AUTO }}
           repository: JupiterOne/jupiterone-remote-mcp
           event-type: npm-package-published
           client-payload: '{"package": "@jupiterone/jupiterone-mcp", "version": "${{ steps.pkg.outputs.version }}"}'
