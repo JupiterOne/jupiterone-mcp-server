@@ -377,3 +377,20 @@ Before running any J1QL query, verify:
    - Proper capitalization for classes
 
 **Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!
+
+#### 📌 IMPORTANT: Query Results URL
+
+When this tool returns query results, it includes a `url` field that provides a direct link to view the results in the JupiterOne UI. **Always share this URL with users when presenting query results** - it allows them to:
+- View the data in an interactive table format
+- Export results to CSV or other formats
+- Save the query for future use
+- Share results with team members
+- Further refine the query in the JupiterOne UI
+
+Example response:
+```json
+{
+  "data": [...query results...],
+  "url": "https://your-account.apps.us.jupiterone.io/home/results?search=..."
+}
+```
