@@ -2,9 +2,23 @@ import { GraphQLClient } from 'graphql-request';
 import { CreateJ1qlFromNaturalLanguageResponse } from '../../types/jupiterone.js';
 import { CREATE_J1QL_FROM_NATURAL_LANGUAGE } from '../graphql/mutations.js';
 import { QUERY_V2 } from '../graphql/queries.js';
+import { getEnv } from '../../utils/getEnv.js';
 
 export class J1qlService {
   constructor(private client: GraphQLClient) {}
+
+  /**
+   * Construct query results URL based on subdomain
+   */
+  constructQueryUrl(query: string, subdomain?: string): string {
+    const environment = getEnv();
+    if (!subdomain || !environment) {
+      return '';
+    }
+    const searchParams = { query };
+    const encodedParams = encodeURIComponent(JSON.stringify(searchParams));
+    return `https://${subdomain}.apps.${environment}.jupiterone.io/home/results?search=${encodedParams}`;
+  }
 
   /**
    * Convert natural language to J1QL query

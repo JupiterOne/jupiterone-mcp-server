@@ -1907,11 +1907,24 @@ export class JupiterOneMcpServer {
             flags: Object.keys(queryFlags).length > 0 ? queryFlags : undefined,
           });
 
+          // Get account info to construct the URL
+          const accountInfo = await client.getAccountInfo();
+          const queryUrl = client.j1qlService.constructQueryUrl(
+            query,
+            accountInfo.subdomain
+          );
+
+          // Add URL to the result
+          const enhancedResult = {
+            ...result,
+            url: queryUrl,
+          };
+
           return {
             content: [
               {
                 type: 'text' as const,
-                text: JSON.stringify(result, null, 2),
+                text: JSON.stringify(enhancedResult, null, 2),
               },
             ],
           };
