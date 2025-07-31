@@ -248,7 +248,7 @@ export class JupiterOneMcpServer {
         try {
           const isConnected = await client.testConnection();
           const accountInfo = isConnected ? await client.getAccountInfo() : null;
-          
+
           // Get package version
           const packageJson = require('../../package.json');
           const version = packageJson.version;
@@ -465,7 +465,7 @@ export class JupiterOneMcpServer {
       handler: async ({ name, type }, client) => {
         try {
           const result = await client.createDashboard({ name, type });
-          
+
           // Get account info to construct the URL
           const accountInfo = await client.getAccountInfo();
           const dashboardUrl = client.dashboardService.constructDashboardUrl(
@@ -1037,13 +1037,10 @@ export class JupiterOneMcpServer {
           };
 
           const result = await client.createInlineQuestionRuleInstance(instance);
-          
+
           // Get account info to construct the URL
           const accountInfo = await client.getAccountInfo();
-          const ruleUrl = client.ruleService.constructRuleUrl(
-            result.id,
-            accountInfo.subdomain
-          );
+          const ruleUrl = client.ruleService.constructRuleUrl(result.id, accountInfo.subdomain);
 
           return {
             content: [
@@ -1271,13 +1268,10 @@ export class JupiterOneMcpServer {
           };
 
           const result = await client.updateInlineQuestionRuleInstance(instance);
-          
+
           // Get account info to construct the URL
           const accountInfo = await client.getAccountInfo();
-          const ruleUrl = client.ruleService.constructRuleUrl(
-            result.id,
-            accountInfo.subdomain
-          );
+          const ruleUrl = client.ruleService.constructRuleUrl(result.id, accountInfo.subdomain);
 
           return {
             content: [
@@ -1726,22 +1720,26 @@ export class JupiterOneMcpServer {
           }
 
           const widget = await client.createDashboardWidget(dashboardId, widgetInput);
-          
+
           // Get account info to construct the dashboard URL
           const accountInfo = await client.getAccountInfo();
           const dashboardUrl = client.dashboardService.constructDashboardUrl(
             dashboardId,
             accountInfo.subdomain
           );
-          
+
           return {
             content: [
               {
                 type: 'text' as const,
-                text: JSON.stringify({
-                  ...widget,
-                  dashboardUrl
-                }, null, 2),
+                text: JSON.stringify(
+                  {
+                    ...widget,
+                    dashboardUrl,
+                  },
+                  null,
+                  2
+                ),
               },
             ],
           };
@@ -1909,10 +1907,7 @@ export class JupiterOneMcpServer {
 
           // Get account info to construct the URL
           const accountInfo = await client.getAccountInfo();
-          const queryUrl = client.j1qlService.constructQueryUrl(
-            query,
-            accountInfo.subdomain
-          );
+          const queryUrl = client.j1qlService.constructQueryUrl(query, accountInfo.subdomain);
 
           // Add URL to the result
           const enhancedResult = {
@@ -1930,6 +1925,68 @@ export class JupiterOneMcpServer {
           };
         } catch (error) {
           return this.createQueryErrorResponse(error, query, validator);
+        }
+      },
+    });
+
+    // Tool: List entity types
+    this.registerTool({
+      name: 'list-entity-types',
+      description: loadDescription('list-entity-types.md'),
+      schema: {},
+      handler: async (_, client) => {
+        try {
+          const results = await client.listEntityTypes();
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify(results, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+          };
+        }
+      },
+    });
+
+    // Tool: List entity properties
+    this.registerTool({
+      name: 'list-entity-properties',
+      description: loadDescription('list-entity-properties.md'),
+      schema: {
+        entityType: z
+          .string()
+          .describe('The entity type to get properties for (e.g., "aws_instance", "okta_user")'),
+      },
+      handler: async ({ entityType }, client) => {
+        try {
+          const results = await client.listEntityProperties(entityType);
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify(results, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+          };
         }
       },
     });

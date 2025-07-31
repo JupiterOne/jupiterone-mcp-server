@@ -1,7 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import { CreateJ1qlFromNaturalLanguageResponse } from '../../types/jupiterone.js';
 import { CREATE_J1QL_FROM_NATURAL_LANGUAGE } from '../graphql/mutations.js';
-import { QUERY_V2 } from '../graphql/queries.js';
+import { QUERY_V2, GET_ENTITY_COUNTS, QUERY_PROPERTIES } from '../graphql/queries.js';
 import { getEnv } from '../../utils/getEnv.js';
 
 export class J1qlService {
@@ -62,21 +62,21 @@ export class J1qlService {
         returnComputedProperties: flags?.computedProperties,
       }
     );
-    
+
     // Handle deferred response
     if (response.queryV2.type === 'deferred' && response.queryV2.url) {
       // Poll the URL until results are ready
       const maxAttempts = 60; // 60 attempts = 1 minute max wait
       const pollInterval = 1000; // 1 second between polls
-      
+
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const fetchResponse = await fetch(response.queryV2.url);
         if (!fetchResponse.ok) {
           throw new Error(`Failed to fetch query results: ${fetchResponse.statusText}`);
         }
-        
+
         const result = await fetchResponse.json();
-        
+
         // Check if the query is complete
         if (result.status === 'COMPLETE' || result.status === 'FAILED') {
           if (result.status === 'FAILED') {
@@ -84,20 +84,56 @@ export class J1qlService {
           }
           return result;
         }
-        
+
         // If still in progress, wait before next poll
         if (result.status === 'IN_PROGRESS') {
           await new Promise(resolve => setTimeout(resolve, pollInterval));
           continue;
         }
-        
+
         // If we get an unexpected status, return the result as-is
         return result;
       }
-      
+
       throw new Error('Query timed out after 60 seconds');
     }
-    
+
     return response.queryV2;
+  }
+
+  /**
+   * List all entity types in the account
+   */
+  async listEntityTypes(): Promise<any> {
+    const response = await this.client.request<{
+      getEntityCounts: {
+        classes: Record<string, number>;
+        types: Record<string, number>;
+      };
+    }>(GET_ENTITY_COUNTS);
+
+    return {
+      classes: response.getEntityCounts.classes,
+      types: response.getEntityCounts.types,
+    };
+  }
+
+  /**
+   * List properties for a specific entity type
+   */
+  async listEntityProperties(entityType: string): Promise<any[]> {
+    const response = await this.client.request<{
+      queryProperties: Array<{
+        id: string;
+        accountId: string;
+        entity: string;
+        name: string;
+        valueType: string;
+        count: number;
+        __typename: string;
+      }>;
+    }>(QUERY_PROPERTIES, { entity: entityType });
+
+    return response.queryProperties;
   }
 }

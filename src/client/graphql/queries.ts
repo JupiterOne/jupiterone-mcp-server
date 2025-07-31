@@ -654,3 +654,28 @@ export const QUERY_V2 = `
     }
   }
 `;
+
+// Get entity counts by class and type
+export const GET_ENTITY_COUNTS = `
+  query GetEntityCounts {
+    getEntityCounts {
+      classes
+      types
+    }
+  }
+`;
+
+// Get properties for a specific entity type
+export const QUERY_PROPERTIES = `
+  query QueryProperties($entity: String) {
+    queryProperties(entity: $entity) {
+      id
+      accountId
+      entity
+      name
+      valueType
+      count
+      __typename
+    }
+  }
+`;

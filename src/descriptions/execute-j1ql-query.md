@@ -2,6 +2,21 @@
 
 **Purpose**: Executes JupiterOne Query Language (J1QL) queries against your JupiterOne data and returns the results. This tool is used to directly run J1QL queries that have been created, either manually or through the natural language converter.
 
+## Recommended Query Development Workflow
+
+**CRITICAL**: Follow this workflow for best results when writing J1QL queries:
+
+1. **Use `list-entity-types`** - Discover what entity classes and types are available in the account
+2. **Evaluate relevant entity types** - Based on the user's request, identify which entity types you need to query
+3. **Use `list-entity-properties`** - For each relevant entity type, list its available properties
+4. **Run exploratory queries** - Execute simple queries with the entity types and properties to see sample values:
+   ```
+   FIND <entity_type> AS e RETURN e.* LIMIT 5
+   ```
+5. **Construct final query** - Build your complete query using the discovered types, properties, and values
+
+This systematic approach ensures your queries will return meaningful results and use the correct property names and filters.
+
 This tool should be used when:
 - You need to validate the data of a query
 - You need to get results from a previously generated query
@@ -319,6 +334,11 @@ LIMIT 10
 
 #### Discovery Queries - ALWAYS START HERE
 
+**Recommended**: Use the dedicated tools for faster discovery:
+- **`list-entity-types`**: Get all entity classes and types with counts
+- **`list-entity-properties`**: Get all properties for a specific entity type
+
+Manual discovery queries if needed:
 1. **Find all entity classes**: `FIND * AS e RETURN e._class, COUNT(e)`
 2. **Explore entity properties**: `FIND EntityClass AS e RETURN e.* LIMIT 10`
 3. **Discover relationships**: `FIND Entity1 THAT RELATES TO AS rel Entity2 RETURN rel._class`
@@ -377,20 +397,3 @@ Before running any J1QL query, verify:
    - Proper capitalization for classes
 
 **Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!
-
-#### 📌 IMPORTANT: Query Results URL
-
-When this tool returns query results, it includes a `url` field that provides a direct link to view the results in the JupiterOne UI. **Always share this URL with users when presenting query results** - it allows them to:
-- View the data in an interactive table format
-- Export results to CSV or other formats
-- Save the query for future use
-- Share results with team members
-- Further refine the query in the JupiterOne UI
-
-Example response:
-```json
-{
-  "data": [...query results...],
-  "url": "https://your-account.apps.us.jupiterone.io/home/results?search=..."
-}
-```

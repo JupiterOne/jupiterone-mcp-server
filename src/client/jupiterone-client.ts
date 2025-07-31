@@ -197,4 +197,12 @@ export class JupiterOneClient {
   async executeJ1qlQuery(...args: Parameters<J1qlService['executeJ1qlQuery']>) {
     return this.j1qlService.executeJ1qlQuery(...args);
   }
+
+  async listEntityTypes() {
+    return this.j1qlService.listEntityTypes();
+  }
+
+  async listEntityProperties(entityType: string) {
+    return this.j1qlService.listEntityProperties(entityType);
+  }
 }
