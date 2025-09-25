@@ -6,7 +6,7 @@ async function testConnection() {
   const config = {
     apiKey: process.env.JUPITERONE_API_KEY,
     accountId: process.env.JUPITERONE_ACCOUNT_ID || 'j1dev',
-    baseUrl: process.env.JUPITERONE_BASE_URL || 'https://graphql.dev.jupiterone.io'
+    baseUrl: process.env.JUPITERONE_GRAPHQL_URL || 'https://graphql.dev.jupiterone.io'
   };
 
   if (!config.apiKey) {

@@ -1,6 +1,6 @@
 export const getEnv = () => {
   try {
-    const baseUrl = process.env.JUPITERONE_BASE_URL;
+    const baseUrl = process.env.JUPITERONE_GRAPHQL_URL;
     if (!baseUrl) {
       return undefined;
     }

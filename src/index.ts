@@ -12,7 +12,7 @@ async function main() {
     const config: JupiterOneConfig = {
       apiKey: process.env.JUPITERONE_API_KEY || '',
       accountId: process.env.JUPITERONE_ACCOUNT_ID || '',
-      baseUrl: process.env.JUPITERONE_BASE_URL || 'https://graphql.us.jupiterone.io',
+      baseUrl: process.env.JUPITERONE_GRAPHQL_URL || 'https://graphql.us.jupiterone.io',
       oauthToken: process.env.JUPITERONE_OAUTH_TOKEN || '',
     };
 

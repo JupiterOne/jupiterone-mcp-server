@@ -28,7 +28,7 @@ Add the following configuration to your Claude Desktop configuration file:
       "env": {
         "JUPITERONE_API_KEY": "your-api-key-here",
         "JUPITERONE_ACCOUNT_ID": "your-account-id-here",
-        "JUPITERONE_BASE_URL": "https://graphql.us.jupiterone.io"
+        "JUPITERONE_GRAPHQL_URL": "https://graphql.us.jupiterone.io"
       }
     }
   }
@@ -54,7 +54,7 @@ Then add this configuration to your Claude Desktop config file:
       "env": {
         "JUPITERONE_API_KEY": "your-api-key-here",
         "JUPITERONE_ACCOUNT_ID": "your-account-id-here",
-        "JUPITERONE_BASE_URL": "https://graphql.us.jupiterone.io"
+        "JUPITERONE_GRAPHQL_URL": "https://graphql.us.jupiterone.io"
       }
     }
   }
@@ -79,7 +79,7 @@ Replace the placeholder values with your actual JupiterOne credentials:
 
 - **JUPITERONE_API_KEY**: Your JupiterOne API key (required)
 - **JUPITERONE_ACCOUNT_ID**: Your JupiterOne account ID (required).
-- **JUPITERONE_BASE_URL**: JupiterOne GraphQL endpoint (optional, defaults to `https://graphql.us.jupiterone.io`)
+- **JUPITERONE_GRAPHQL_URL**: JupiterOne GraphQL endpoint (optional, defaults to `https://graphql.us.jupiterone.io`)
 
 ### Getting Your JupiterOne Credentials
 

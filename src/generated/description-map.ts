@@ -839,8 +839,8 @@ Unified entities typically also have additional enrichment making them valuable 
 
 \`\`\`
 FIND UnifiedIdentity AS identity
-    THAT IS << User 
-    THAT RELATES TO AS rel (Device|Host) 
+    THAT IS << User
+    THAT RELATES TO AS rel (Device|Host)
     THAT IS >> UnifiedDevice AS device
 RETURN identity.displayName, rel._class, device.displayName
 \`\`\`
@@ -1141,7 +1141,7 @@ Before running any J1QL query, verify:
 #### Most Common Errors (Quick Reference)
 
 1. **Missing quotes**: \`name = john\` → \`name = 'john'\`
-2. **Wrong quotes**: \`name = "john"\` → \`name = 'john'\`  
+2. **Wrong quotes**: \`name = "john"\` → \`name = 'john'\`
 3. **Alias placement**: \`AS u WITH active = true\` → \`WITH active = true AS u\`
 4. **WHERE needs alias**: \`WHERE active = true\` → \`AS u WHERE u.active = true\`
 5. **Undefined alias**: \`FIND User RETURN u.name\` → \`FIND User AS u RETURN u.name\`
@@ -1177,7 +1177,23 @@ Before running any J1QL query, verify:
    - LIMIT to prevent timeouts
    - Proper capitalization for classes
 
-**Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!`,
+**Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!
+
+#### 📌 IMPORTANT: Query Results URL
+
+When this tool returns query results, it includes a \`url\` field that provides a direct link to view the results in the JupiterOne UI. **Always share this URL with users when presenting query results** - it allows them to:
+- View the data in an interactive table format
+- Export results to CSV or other formats
+- Save the query for future use
+- Share results with team members
+- Further refine the query in the JupiterOne UI
+
+Example response:
+\`\`\`json
+{
+  "data": [...query results...],
+  "url": "https://your-account.apps.us.jupiterone.io/home/results?search=..."
+}`,
   "get-dashboard-details.md": `# Get Dashboard Details Tool
 
 Get detailed information about a specific JupiterOne dashboard including its widgets, layout, and configuration.

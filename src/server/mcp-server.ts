@@ -14,6 +14,16 @@ import {
 } from '../types/jupiterone.js';
 import { loadDescription } from '../utils/load-description.js';
 import { J1QLValidator } from '../utils/j1ql-validator.js';
+import {
+  CreateInsightsWidgetInputSchema,
+  RuleTemplatesSchema,
+  QueryVariablesSchema,
+  QueryFlagsSchema,
+  ScopeFilterSchema,
+  ActionTargetValueSchema,
+  ActionDataSchema,
+  JiraAdditionalFieldsSchema,
+} from './schemas.js';
 
 export class JupiterOneMcpServer {
   public server: McpServer;
@@ -894,7 +904,7 @@ export class JupiterOneMcpServer {
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
         specVersion: z.number().optional().describe('Specification version'),
         tags: z.array(z.string()).optional().describe('Tags for categorizing the rule'),
-        templates: z.record(z.any()).optional().describe('Template variables'),
+        templates: RuleTemplatesSchema.optional(),
         question: z
           .object({
             queries: z.array(
@@ -941,8 +951,7 @@ export class JupiterOneMcpServer {
                       .string()
                       .optional()
                       .describe('Property to set (for SET_PROPERTY actions)'),
-                    targetValue: z
-                      .any()
+                    targetValue: ActionTargetValueSchema
                       .optional()
                       .describe('Value to set (for SET_PROPERTY actions)'),
                     integrationInstanceId: z
@@ -960,7 +969,7 @@ export class JupiterOneMcpServer {
                       .describe('Slack channels for SEND_SLACK_MESSAGE action'),
                     bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
                     region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-                    data: z.any().optional().describe('Additional data for actions'),
+                    data: ActionDataSchema.optional().describe('Additional data for actions'),
                     entityClass: z
                       .string()
                       .optional()
@@ -983,8 +992,7 @@ export class JupiterOneMcpServer {
                       .describe(
                         'Whether to update content on changes for CREATE_JIRA_TICKET action'
                       ),
-                    additionalFields: z
-                      .any()
+                    additionalFields: JiraAdditionalFieldsSchema
                       .optional()
                       .describe('Additional fields for CREATE_JIRA_TICKET action'),
                   })
@@ -1116,7 +1124,7 @@ export class JupiterOneMcpServer {
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
         specVersion: z.number().describe('Specification version'),
         tags: z.array(z.string()).describe('Tags for categorizing the rule'),
-        templates: z.record(z.any()).describe('Template variables'),
+        templates: RuleTemplatesSchema.describe('Template variables'),
         labels: z
           .array(
             z.object({
@@ -1165,8 +1173,7 @@ export class JupiterOneMcpServer {
                     .string()
                     .optional()
                     .describe('Property to set (for SET_PROPERTY actions)'),
-                  targetValue: z
-                    .any()
+                  targetValue: ActionTargetValueSchema
                     .optional()
                     .describe('Value to set (for SET_PROPERTY actions)'),
                   integrationInstanceId: z
@@ -1184,7 +1191,7 @@ export class JupiterOneMcpServer {
                     .describe('Slack channels for SEND_SLACK_MESSAGE action'),
                   bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
                   region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-                  data: z.any().optional().describe('Additional data for actions'),
+                  data: ActionDataSchema.optional().describe('Additional data for actions'),
                   entityClass: z
                     .string()
                     .optional()
@@ -1199,8 +1206,7 @@ export class JupiterOneMcpServer {
                     .boolean()
                     .optional()
                     .describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
-                  additionalFields: z
-                    .any()
+                  additionalFields: JiraAdditionalFieldsSchema
                     .optional()
                     .describe('Additional fields for CREATE_JIRA_TICKET action'),
                   entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
@@ -1697,7 +1703,7 @@ export class JupiterOneMcpServer {
       description: loadDescription('create-dashboard-widget.md'),
       schema: {
         dashboardId: z.string().describe('ID of the dashboard to add the widget to'),
-        input: z.any().describe('Widget input object (CreateInsightsWidgetInput)'),
+        input: CreateInsightsWidgetInputSchema.describe('Widget input object (CreateInsightsWidgetInput)'),
       },
       handler: async ({ dashboardId, input }, client, validator) => {
         try {
@@ -1864,8 +1870,7 @@ export class JupiterOneMcpServer {
       description: loadDescription('execute-j1ql-query.md'),
       schema: {
         query: z.string().describe('A J1QL query string that describes what data to return'),
-        variables: z
-          .record(z.any())
+        variables: QueryVariablesSchema
           .optional()
           .describe('A JSON map of values to be used as parameters for the query'),
         cursor: z
@@ -1880,9 +1885,9 @@ export class JupiterOneMcpServer {
           .enum(['DISABLED', 'FORCE'])
           .optional()
           .describe('Allows for a deferred response to be returned'),
-        flags: z.record(z.any()).optional().describe('Flags for query execution'),
+        flags: QueryFlagsSchema.optional().describe('Flags for query execution'),
         scopeFilters: z
-          .array(z.record(z.any()))
+          .array(ScopeFilterSchema)
           .optional()
           .describe('Array of filters that define the desired vertex'),
       },
