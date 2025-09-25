@@ -48,6 +48,15 @@ export const MarkdownChartSettingsSchema = z.object({
   text: z.string().describe('Markdown content to display'),
 });
 
+// Generic chart settings for less common chart types
+const GenericChartSettingsSchema = z.record(z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.unknown()),
+  z.record(z.unknown()),
+]));
+
 // Combined settings schema that varies based on chart type
 export const WidgetSettingsSchema = z.object({
   pie: PieChartSettingsSchema.optional(),
@@ -55,11 +64,11 @@ export const WidgetSettingsSchema = z.object({
   line: LineChartSettingsSchema.optional(),
   number: NumberChartSettingsSchema.optional(),
   markdown: MarkdownChartSettingsSchema.optional(),
-  area: z.record(z.any()).optional(),
-  graph: z.record(z.any()).optional(),
-  matrix: z.record(z.any()).optional(),
-  table: z.record(z.any()).optional(),
-  status: z.record(z.any()).optional(),
+  area: GenericChartSettingsSchema.optional(),
+  graph: GenericChartSettingsSchema.optional(),
+  matrix: GenericChartSettingsSchema.optional(),
+  table: GenericChartSettingsSchema.optional(),
+  status: GenericChartSettingsSchema.optional(),
 });
 
 // Widget Config Schema
@@ -68,7 +77,13 @@ export const WidgetConfigSchema = z.object({
     .array(WidgetQuerySchema)
     .describe('Array of J1QL queries for the widget'),
   settings: WidgetSettingsSchema.optional().describe('Chart-specific settings'),
-  postQueryFilters: z.record(z.any()).optional().describe('Filters to apply after query execution'),
+  postQueryFilters: z.record(z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.array(z.unknown()),
+    z.record(z.unknown()),
+  ])).optional().describe('Filters to apply after query execution'),
   disableQueryPolicyFilters: z
     .boolean()
     .optional()
@@ -92,8 +107,8 @@ export const RuleTemplatesSchema = z.record(
     z.string(),
     z.number(),
     z.boolean(),
-    z.array(z.any()),
-    z.record(z.any()),
+    z.array(z.unknown()),
+    z.record(z.unknown()),
   ])
 ).describe('Template variables for the rule');
 
@@ -104,8 +119,8 @@ export const QueryVariablesSchema = z.record(
     z.number(),
     z.boolean(),
     z.null(),
-    z.array(z.any()),
-    z.record(z.any()),
+    z.array(z.unknown()),
+    z.record(z.unknown()),
   ])
 ).describe('Variables to be used as parameters in the J1QL query');
 
@@ -120,7 +135,14 @@ export const QueryFlagsSchema = z.object({
 // Scope Filter Schema
 export const ScopeFilterSchema = z.object({
   property: z.string().describe('Property to filter on'),
-  value: z.any().describe('Value to filter by'),
+  value: z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(z.unknown()),
+    z.record(z.unknown()),
+  ]).describe('Value to filter by'),
   operator: z.string().optional().describe('Comparison operator'),
 }).passthrough();
 
@@ -129,8 +151,8 @@ export const ActionTargetValueSchema = z.union([
   z.string(),
   z.number(),
   z.boolean(),
-  z.array(z.any()),
-  z.record(z.any()),
+  z.array(z.unknown()),
+  z.record(z.unknown()),
 ]).describe('Value to set for the action target');
 
 // Action data schema
@@ -139,9 +161,16 @@ export const ActionDataSchema = z.union([
   z.object({
     description: z.string().optional(),
     title: z.string().optional(),
-    content: z.any().optional(),
+    content: z.union([
+      z.string(),
+      z.number(),
+      z.boolean(),
+      z.null(),
+      z.array(z.unknown()),
+      z.record(z.unknown()),
+    ]).optional(),
   }),
-  z.record(z.any()),
+  z.record(z.unknown()),
 ]).describe('Additional data for the action');
 
 // Additional fields for Jira tickets
