@@ -1,7 +1,7 @@
 import { GraphQLClient } from 'graphql-request';
 import { CreateJ1qlFromNaturalLanguageResponse } from '../../types/jupiterone.js';
 import { CREATE_J1QL_FROM_NATURAL_LANGUAGE } from '../graphql/mutations.js';
-import { QUERY_V2, GET_ENTITY_COUNTS, QUERY_PROPERTIES } from '../graphql/queries.js';
+import { QUERY_V2, GET_ENTITY_COUNTS } from '../graphql/queries.js';
 import { getEnv } from '../../utils/getEnv.js';
 
 export class J1qlService {
@@ -116,24 +116,5 @@ export class J1qlService {
       classes: response.getEntityCounts.classes,
       types: response.getEntityCounts.types,
     };
-  }
-
-  /**
-   * List properties for a specific entity type
-   */
-  async listEntityProperties(entityType: string): Promise<any[]> {
-    const response = await this.client.request<{
-      queryProperties: Array<{
-        id: string;
-        accountId: string;
-        entity: string;
-        name: string;
-        valueType: string;
-        count: number;
-        __typename: string;
-      }>;
-    }>(QUERY_PROPERTIES, { entity: entityType });
-
-    return response.queryProperties;
   }
 }
