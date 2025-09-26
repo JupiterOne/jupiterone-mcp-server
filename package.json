@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/jupiterone-mcp",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "description": "Model Context Protocol server for JupiterOne account rules and rule details",
   "main": "dist/index.js",
   "bin": {
@@ -15,8 +15,7 @@
     "test": "jest",
     "test-connection": "node test-connection.js",
     "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "prepare": "npm run build"
+    "format": "prettier --write src/**/*.ts"
   },
   "keywords": [
     "mcp",

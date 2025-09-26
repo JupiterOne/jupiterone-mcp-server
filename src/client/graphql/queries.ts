@@ -664,18 +664,3 @@ export const GET_ENTITY_COUNTS = `
     }
   }
 `;
-
-// Get properties for a specific entity type
-export const QUERY_PROPERTIES = `
-  query QueryProperties($entity: String) {
-    queryProperties(entity: $entity) {
-      id
-      accountId
-      entity
-      name
-      valueType
-      count
-      __typename
-    }
-  }
-`;

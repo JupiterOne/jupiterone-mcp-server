@@ -201,8 +201,4 @@ export class JupiterOneClient {
   async listEntityTypes() {
     return this.j1qlService.listEntityTypes();
   }
-
-  async listEntityProperties(entityType: string) {
-    return this.j1qlService.listEntityProperties(entityType);
-  }
 }

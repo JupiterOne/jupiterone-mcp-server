@@ -1958,38 +1958,6 @@ export class JupiterOneMcpServer {
       },
     });
 
-    // Tool: List entity properties
-    this.registerTool({
-      name: 'list-entity-properties',
-      description: loadDescription('list-entity-properties.md'),
-      schema: {
-        entityType: z
-          .string()
-          .describe('The entity type to get properties for (e.g., "aws_instance", "okta_user")'),
-      },
-      handler: async ({ entityType }, client) => {
-        try {
-          const results = await client.listEntityProperties(entityType);
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: JSON.stringify(results, null, 2),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              },
-            ],
-          };
-        }
-      },
-    });
   }
 
   // Helper methods for validation
