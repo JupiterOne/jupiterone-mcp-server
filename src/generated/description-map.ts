@@ -612,6 +612,73 @@ Creates a Jira ticket for the alert (requires Jira integration).
 
 **Common Entity Classes**: \`"Finding"\`, \`"Incident"\`, \`"Issue"\`
 
+**Auto-Resolve Configuration** (used with FOR_EACH_ITEM):
+
+When \`CREATE_JIRA_TICKET\` is nested inside a \`FOR_EACH_ITEM\` action, you can enable auto-resolution of tickets when entities no longer match the query:
+
+\`\`\`json
+{
+  "type": "CREATE_JIRA_TICKET",
+  "autoResolve": true,
+  "resolvedStatus": "Closed",
+  "entityClass": "Issue",
+  "summary": "Alert: {{result.entity.displayName}}",
+  "issueType": "Task",
+  "project": "SEC"
+}
+\`\`\`
+
+### 8. FOR_EACH_ITEM
+
+Iterates over query results and executes nested actions for each individual item. This is useful when you need to create separate tickets, notifications, or other actions per entity rather than a single aggregated action.
+
+**Configuration**:
+
+\`\`\`json
+{
+  "type": "FOR_EACH_ITEM",
+  "items": "{{queries.query0.data}}",
+  "itemRef": "result",
+  "actions": [
+    {
+      "integrationInstanceId": "1993ff4d-18bb-488a-8966-dde76a4c3669",
+      "type": "CREATE_JIRA_TICKET",
+      "entityClass": "Issue",
+      "summary": "Alert: {{result.entity.displayName}}",
+      "issueType": "Task",
+      "project": "SEC",
+      "autoResolve": true,
+      "resolvedStatus": "Closed",
+      "additionalFields": {
+        "description": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "[Alert Link]({{alertWebLink}})\n\n**Affected Item:** {{result.entity.displayName}}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+\`\`\`
+
+**Required Fields**:
+
+- \`items\`: Template reference to the data to iterate over (e.g., \`"{{queries.query0.data}}"\`)
+- \`itemRef\`: Variable name to reference each item in nested action templates (e.g., \`"result"\`)
+- \`actions\`: Array of action objects to execute for each item (supports any action type)
+
+**Template Access**: Inside nested actions, use \`{{itemRef.entity.propertyName}}\` or \`{{itemRef.properties.propertyName}}\` to access each item's data.
+
 ## Template Variables and Formatting
 
 ### Available Variables
@@ -765,6 +832,23 @@ Unless the user gives a specific query to run, this should always be used for de
 - Queries for rules
 - Queries for widgets
 - Queries to answer a user's question regarding their data in jupiterone`,
+  "delete-rule.md": `# Delete Rule Tool
+
+Permanently delete an alert rule from your JupiterOne account. This action is irreversible — once deleted, the rule and its configuration cannot be recovered.
+
+**Important**: Before deleting, use \`get-rule-details\` to confirm you are targeting the correct rule. Consider using \`list-rules\` first if you need to find the rule ID.
+
+## Parameters
+- \`ruleId\` (required): The unique identifier of the rule to delete
+
+## Example Usage
+Delete a specific rule:
+\`\`\`json
+{
+  "ruleId": "12345678-1234-1234-1234-123456789abc"
+}
+\`\`\`
+`,
   "evaluate-rule.md": `# Evaluate Rule Tool
 
 Manually trigger the evaluation of a JupiterOne alert rule. This tool forces an immediate evaluation of the rule's conditions and returns the results.
@@ -2260,6 +2344,73 @@ Creates a Jira ticket for the alert (requires Jira integration).
   }
 }
 \`\`\`
+
+**Auto-Resolve Configuration** (used with FOR_EACH_ITEM):
+
+When \`CREATE_JIRA_TICKET\` is nested inside a \`FOR_EACH_ITEM\` action, you can enable auto-resolution of tickets when entities no longer match the query:
+
+\`\`\`json
+{
+  "type": "CREATE_JIRA_TICKET",
+  "autoResolve": true,
+  "resolvedStatus": "Closed",
+  "entityClass": "Issue",
+  "summary": "Alert: {{result.entity.displayName}}",
+  "issueType": "Task",
+  "project": "SEC"
+}
+\`\`\`
+
+### 8. FOR_EACH_ITEM
+
+Iterates over query results and executes nested actions for each individual item. This is useful when you need to create separate tickets, notifications, or other actions per entity rather than a single aggregated action.
+
+**Configuration**:
+
+\`\`\`json
+{
+  "type": "FOR_EACH_ITEM",
+  "items": "{{queries.query0.data}}",
+  "itemRef": "result",
+  "actions": [
+    {
+      "integrationInstanceId": "1993ff4d-18bb-488a-8966-dde76a4c3669",
+      "type": "CREATE_JIRA_TICKET",
+      "entityClass": "Issue",
+      "summary": "Alert: {{result.entity.displayName}}",
+      "issueType": "Task",
+      "project": "SEC",
+      "autoResolve": true,
+      "resolvedStatus": "Closed",
+      "additionalFields": {
+        "description": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "[Alert Link]({{alertWebLink}})\n\n**Affected Item:** {{result.entity.displayName}}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+\`\`\`
+
+**Required Fields**:
+
+- \`items\`: Template reference to the data to iterate over (e.g., \`"{{queries.query0.data}}"\`)
+- \`itemRef\`: Variable name to reference each item in nested action templates (e.g., \`"result"\`)
+- \`actions\`: Array of action objects to execute for each item (supports any action type)
+
+**Template Access**: Inside nested actions, use \`{{itemRef.entity.propertyName}}\` or \`{{itemRef.properties.propertyName}}\` to access each item's data.
 
 ## Template Variables and Formatting
 

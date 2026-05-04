@@ -64,22 +64,53 @@ export const UPDATE_INLINE_QUESTION_RULE = `
   ) {
     updateInlineQuestionRuleInstance(instance: $instance) {
       id
+      resourceGroupId
+      accountId
       name
       description
       version
+      lastEvaluationStartOn
+      lastEvaluationEndOn
+      evaluationStep
+      specVersion
+      notifyOnFailure
+      triggerActionsOnNewEntitiesOnly
+      ignorePreviousResults
       pollingInterval
+      templates
+      outputs
+      labels {
+        labelName
+        labelValue
+        __typename
+      }
       question {
         queries {
           query
           name
-          version
+          includeDeleted
+          __typename
         }
+        __typename
       }
+      questionId
+      latest
+      deleted
+      type
       operations {
         when
         actions
+        __typename
       }
-      outputs
+      latestAlertId
+      latestAlertIsActive
+      state {
+        actions
+        __typename
+      }
+      tags
+      remediationSteps
+      __typename
     }
   }
 `;

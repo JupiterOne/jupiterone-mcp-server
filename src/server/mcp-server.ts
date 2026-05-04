@@ -863,6 +863,101 @@ export class JupiterOneMcpServer {
       },
     });
 
+    // Shared action schema for rule tools (uses z.lazy for recursive FOR_EACH_ITEM support)
+    const actionSchema: z.ZodType<any> = z.lazy(() =>
+      z.object({
+        id: z.string().optional(),
+        type: z
+          .string()
+          .describe(
+            'Action type (e.g., SET_PROPERTY, CREATE_ALERT, SEND_EMAIL, WEBHOOK, FOR_EACH_ITEM)'
+          ),
+        targetProperty: z
+          .string()
+          .optional()
+          .describe('Property to set (for SET_PROPERTY actions)'),
+        targetValue: z.any().optional().describe('Value to set (for SET_PROPERTY actions)'),
+        integrationInstanceId: z
+          .string()
+          .optional()
+          .describe('ID of the integration instance for integration actions'),
+        recipients: z
+          .array(z.string())
+          .optional()
+          .describe('Email recipients for SEND_EMAIL action'),
+        body: z
+          .union([z.string(), z.record(z.any())])
+          .optional()
+          .describe('Message body for email/slack/webhook actions'),
+        channels: z
+          .array(z.string())
+          .optional()
+          .describe('Slack channels for SEND_SLACK_MESSAGE action'),
+        bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
+        region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
+        data: z.any().optional().describe('Additional data for actions'),
+        entityClass: z
+          .string()
+          .optional()
+          .describe('Entity class for CREATE_JIRA_TICKET action'),
+        summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
+        issueType: z.string().optional().describe('Issue type for CREATE_JIRA_TICKET action'),
+        project: z.string().optional().describe('Project key for CREATE_JIRA_TICKET action'),
+        updateContentOnChanges: z
+          .boolean()
+          .optional()
+          .describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
+        additionalFields: z
+          .any()
+          .optional()
+          .describe('Additional fields for CREATE_JIRA_TICKET action'),
+        autoResolve: z
+          .boolean()
+          .optional()
+          .describe(
+            'Auto-resolve Jira ticket when entity no longer matches (CREATE_JIRA_TICKET)'
+          ),
+        resolvedStatus: z
+          .string()
+          .optional()
+          .describe(
+            'Status to transition to on auto-resolve, e.g. "Closed" (CREATE_JIRA_TICKET)'
+          ),
+        entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
+        tags: z
+          .array(
+            z.object({
+              name: z.string(),
+              value: z.string().nullable(),
+            })
+          )
+          .optional()
+          .describe('Tags for TAG_ENTITIES action'),
+        method: z
+          .string()
+          .optional()
+          .describe('HTTP method for WEBHOOK action (e.g., POST, GET)'),
+        endpoint: z.string().optional().describe('Webhook URL endpoint for WEBHOOK action'),
+        headers: z.record(z.string()).optional().describe('HTTP headers for WEBHOOK action'),
+        items: z
+          .string()
+          .optional()
+          .describe(
+            'Template reference to iterate over for FOR_EACH_ITEM (e.g., "{{queries.query0.data}}")'
+          ),
+        itemRef: z
+          .string()
+          .optional()
+          .describe(
+            'Variable name for current item in FOR_EACH_ITEM loop (e.g., "result")'
+          ),
+        actions: z
+          .array(actionSchema)
+          .optional()
+          .describe('Nested actions to execute for each item in FOR_EACH_ITEM'),
+      })
+    );
+
     // Tool: Create inline question rule instance
     this.registerTool({
       name: 'create-inline-question-rule',
@@ -930,66 +1025,7 @@ export class JupiterOneMcpServer {
                     ),
                 })
                 .describe('Condition that triggers the actions'),
-              actions: z
-                .array(
-                  z.object({
-                    id: z.string().optional(),
-                    type: z
-                      .string()
-                      .describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT, SEND_EMAIL)'),
-                    targetProperty: z
-                      .string()
-                      .optional()
-                      .describe('Property to set (for SET_PROPERTY actions)'),
-                    targetValue: z
-                      .any()
-                      .optional()
-                      .describe('Value to set (for SET_PROPERTY actions)'),
-                    integrationInstanceId: z
-                      .string()
-                      .optional()
-                      .describe('ID of the integration instance for integration actions'),
-                    recipients: z
-                      .array(z.string())
-                      .optional()
-                      .describe('Email recipients for SEND_EMAIL action'),
-                    body: z.string().optional().describe('Message body for email/slack actions'),
-                    channels: z
-                      .array(z.string())
-                      .optional()
-                      .describe('Slack channels for SEND_SLACK_MESSAGE action'),
-                    bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
-                    region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-                    data: z.any().optional().describe('Additional data for actions'),
-                    entityClass: z
-                      .string()
-                      .optional()
-                      .describe('Entity class for CREATE_JIRA_TICKET action'),
-                    summary: z
-                      .string()
-                      .optional()
-                      .describe('Summary for CREATE_JIRA_TICKET action'),
-                    issueType: z
-                      .string()
-                      .optional()
-                      .describe('Issue type for CREATE_JIRA_TICKET action'),
-                    project: z
-                      .string()
-                      .optional()
-                      .describe('Project key for CREATE_JIRA_TICKET action'),
-                    updateContentOnChanges: z
-                      .boolean()
-                      .optional()
-                      .describe(
-                        'Whether to update content on changes for CREATE_JIRA_TICKET action'
-                      ),
-                    additionalFields: z
-                      .any()
-                      .optional()
-                      .describe('Additional fields for CREATE_JIRA_TICKET action'),
-                  })
-                )
-                .describe('Actions to take when condition is met'),
+              actions: z.array(actionSchema).describe('Actions to take when condition is met'),
             })
           )
           .describe('Operations to perform when conditions are met'),
@@ -1114,6 +1150,7 @@ export class JupiterOneMcpServer {
           ])
           .describe('How frequently to evaluate the rule'),
         outputs: z.array(z.string()).describe('Output fields from the rule evaluation'),
+        version: z.number().describe('Current version number of the rule (from get-rule-details)'),
         specVersion: z.number().describe('Specification version'),
         tags: z.array(z.string()).describe('Tags for categorizing the rule'),
         templates: z.record(z.any()).describe('Template variables'),
@@ -1157,64 +1194,7 @@ export class JupiterOneMcpServer {
                     ),
                 })
                 .describe('Condition that triggers the actions'),
-              actions: z.array(
-                z.object({
-                  id: z.string().optional(),
-                  type: z.string().describe('Action type (e.g., SET_PROPERTY, CREATE_ALERT)'),
-                  targetProperty: z
-                    .string()
-                    .optional()
-                    .describe('Property to set (for SET_PROPERTY actions)'),
-                  targetValue: z
-                    .any()
-                    .optional()
-                    .describe('Value to set (for SET_PROPERTY actions)'),
-                  integrationInstanceId: z
-                    .string()
-                    .optional()
-                    .describe('ID of the integration instance for integration actions'),
-                  recipients: z
-                    .array(z.string())
-                    .optional()
-                    .describe('Email recipients for SEND_EMAIL action'),
-                  body: z.string().optional().describe('Message body for email/slack actions'),
-                  channels: z
-                    .array(z.string())
-                    .optional()
-                    .describe('Slack channels for SEND_SLACK_MESSAGE action'),
-                  bucket: z.string().optional().describe('S3 bucket name for SEND_TO_S3 action'),
-                  region: z.string().optional().describe('AWS region for SEND_TO_S3 action'),
-                  data: z.any().optional().describe('Additional data for actions'),
-                  entityClass: z
-                    .string()
-                    .optional()
-                    .describe('Entity class for CREATE_JIRA_TICKET action'),
-                  summary: z.string().optional().describe('Summary for CREATE_JIRA_TICKET action'),
-                  issueType: z
-                    .string()
-                    .optional()
-                    .describe('Issue type for CREATE_JIRA_TICKET action'),
-                  project: z.string().optional().describe('Project for CREATE_JIRA_TICKET action'),
-                  updateContentOnChanges: z
-                    .boolean()
-                    .optional()
-                    .describe('Whether to update content on changes for CREATE_JIRA_TICKET action'),
-                  additionalFields: z
-                    .any()
-                    .optional()
-                    .describe('Additional fields for CREATE_JIRA_TICKET action'),
-                  entities: z.string().optional().describe('Entities for TAG_ENTITIES action'),
-                  tags: z
-                    .array(
-                      z.object({
-                        name: z.string(),
-                        value: z.string().nullable(),
-                      })
-                    )
-                    .optional()
-                    .describe('Tags for TAG_ENTITIES action'),
-                })
-              ),
+              actions: z.array(actionSchema),
             })
           )
           .describe('Operations that define when and what actions to take'),
@@ -1229,6 +1209,7 @@ export class JupiterOneMcpServer {
           ignorePreviousResults,
           pollingInterval,
           outputs,
+          version,
           specVersion,
           tags,
           templates,
@@ -1257,6 +1238,7 @@ export class JupiterOneMcpServer {
             ignorePreviousResults,
             pollingInterval,
             outputs,
+            version,
             specVersion,
             labels,
             tags,
@@ -1314,6 +1296,45 @@ export class JupiterOneMcpServer {
               {
                 type: 'text' as const,
                 text: `Error updating inline question rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      },
+    });
+
+    // Tool: Delete a rule instance
+    this.registerTool({
+      name: 'delete-rule',
+      description: loadDescription('delete-rule.md'),
+      schema: {
+        ruleId: z.string().describe('The unique identifier of the rule to delete'),
+      },
+      handler: async ({ ruleId }, client) => {
+        try {
+          const result = await client.deleteRuleInstance(ruleId);
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify(
+                  {
+                    success: true,
+                    deletedRuleId: result.id,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: `Error deleting rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
               },
             ],
             isError: true,

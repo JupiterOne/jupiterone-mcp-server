@@ -33,6 +33,11 @@ export type Action = {
   type: string;
   targetProperty?: string;
   targetValue?: any;
+  autoResolve?: boolean;
+  resolvedStatus?: string;
+  items?: string;
+  itemRef?: string;
+  actions?: Action[];
   [key: string]: any;
 };
 
@@ -177,6 +182,7 @@ export interface CreateInlineQuestionRuleInstanceInput {
 export interface UpdateInlineQuestionRuleInstanceInput
   extends CreateInlineQuestionRuleInstanceInput {
   id: string;
+  version: number;
 }
 
 export interface CreateReferencedQuestionRuleInstanceInput {

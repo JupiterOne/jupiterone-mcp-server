@@ -269,6 +269,73 @@ Creates a Jira ticket for the alert (requires Jira integration).
 
 **Common Entity Classes**: `"Finding"`, `"Incident"`, `"Issue"`
 
+**Auto-Resolve Configuration** (used with FOR_EACH_ITEM):
+
+When `CREATE_JIRA_TICKET` is nested inside a `FOR_EACH_ITEM` action, you can enable auto-resolution of tickets when entities no longer match the query:
+
+```json
+{
+  "type": "CREATE_JIRA_TICKET",
+  "autoResolve": true,
+  "resolvedStatus": "Closed",
+  "entityClass": "Issue",
+  "summary": "Alert: {{result.entity.displayName}}",
+  "issueType": "Task",
+  "project": "SEC"
+}
+```
+
+### 8. FOR_EACH_ITEM
+
+Iterates over query results and executes nested actions for each individual item. This is useful when you need to create separate tickets, notifications, or other actions per entity rather than a single aggregated action.
+
+**Configuration**:
+
+```json
+{
+  "type": "FOR_EACH_ITEM",
+  "items": "{{queries.query0.data}}",
+  "itemRef": "result",
+  "actions": [
+    {
+      "integrationInstanceId": "1993ff4d-18bb-488a-8966-dde76a4c3669",
+      "type": "CREATE_JIRA_TICKET",
+      "entityClass": "Issue",
+      "summary": "Alert: {{result.entity.displayName}}",
+      "issueType": "Task",
+      "project": "SEC",
+      "autoResolve": true,
+      "resolvedStatus": "Closed",
+      "additionalFields": {
+        "description": {
+          "type": "doc",
+          "version": 1,
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "[Alert Link]({{alertWebLink}})\n\n**Affected Item:** {{result.entity.displayName}}"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+**Required Fields**:
+
+- `items`: Template reference to the data to iterate over (e.g., `"{{queries.query0.data}}"`)
+- `itemRef`: Variable name to reference each item in nested action templates (e.g., `"result"`)
+- `actions`: Array of action objects to execute for each item (supports any action type)
+
+**Template Access**: Inside nested actions, use `{{itemRef.entity.propertyName}}` or `{{itemRef.properties.propertyName}}` to access each item's data.
+
 ## Template Variables and Formatting
 
 ### Available Variables
