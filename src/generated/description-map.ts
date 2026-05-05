@@ -832,23 +832,6 @@ Unless the user gives a specific query to run, this should always be used for de
 - Queries for rules
 - Queries for widgets
 - Queries to answer a user's question regarding their data in jupiterone`,
-  "delete-rule.md": `# Delete Rule Tool
-
-Permanently delete an alert rule from your JupiterOne account. This action is irreversible — once deleted, the rule and its configuration cannot be recovered.
-
-**Important**: Before deleting, use \`get-rule-details\` to confirm you are targeting the correct rule. Consider using \`list-rules\` first if you need to find the rule ID.
-
-## Parameters
-- \`ruleId\` (required): The unique identifier of the rule to delete
-
-## Example Usage
-Delete a specific rule:
-\`\`\`json
-{
-  "ruleId": "12345678-1234-1234-1234-123456789abc"
-}
-\`\`\`
-`,
   "evaluate-rule.md": `# Evaluate Rule Tool
 
 Manually trigger the evaluation of a JupiterOne alert rule. This tool forces an immediate evaluation of the rule's conditions and returns the results.

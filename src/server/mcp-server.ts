@@ -1304,45 +1304,6 @@ export class JupiterOneMcpServer {
       },
     });
 
-    // Tool: Delete a rule instance
-    this.registerTool({
-      name: 'delete-rule',
-      description: loadDescription('delete-rule.md'),
-      schema: {
-        ruleId: z.string().describe('The unique identifier of the rule to delete'),
-      },
-      handler: async ({ ruleId }, client) => {
-        try {
-          const result = await client.deleteRuleInstance(ruleId);
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: JSON.stringify(
-                  {
-                    success: true,
-                    deletedRuleId: result.id,
-                  },
-                  null,
-                  2
-                ),
-              },
-            ],
-          };
-        } catch (error) {
-          return {
-            content: [
-              {
-                type: 'text' as const,
-                text: `Error deleting rule: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              },
-            ],
-            isError: true,
-          };
-        }
-      },
-    });
-
     // Add get-integration-job tool
     this.registerTool({
       name: 'get-integration-job',
