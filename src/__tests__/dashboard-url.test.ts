@@ -11,12 +11,12 @@ describe('Dashboard URL Construction', () => {
   describe('constructDashboardUrl', () => {
     it('should construct URL with provided subdomain', () => {
       const dashboardId = '6101fdba-e7bb-4f64-a9fb-62ba5f0641a2';
-      const subdomain = 'ripple-4e';
+      const subdomain = 'acme-co';
 
       const url = dashboardService.constructDashboardUrl(dashboardId, subdomain);
 
       expect(url).toBe(
-        'https://ripple-4e.apps.us.jupiterone.io/insights/dashboards/6101fdba-e7bb-4f64-a9fb-62ba5f0641a2'
+        'https://acme-co.apps.us.jupiterone.io/insights/dashboards/6101fdba-e7bb-4f64-a9fb-62ba5f0641a2'
       );
     });
 

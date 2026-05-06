@@ -37,7 +37,7 @@ The response will include:
   "id": "dashboard-id",
   "name": "Security Overview",
   "type": "User",
-  "url": "https://ripple-4e.apps.us.jupiterone.io/insights/dashboards/dashboard-id"
+  "url": "https://acme-co.apps.us.jupiterone.io/insights/dashboards/dashboard-id"
 }
 ```
 
@@ -52,7 +52,7 @@ The response will include:
   "id": "widget-id",
   "title": "Widget Title",
   ...
-  "dashboardUrl": "https://ripple-4e.apps.us.jupiterone.io/insights/dashboards/dashboard-id"
+  "dashboardUrl": "https://acme-co.apps.us.jupiterone.io/insights/dashboards/dashboard-id"
 }
 ```
 
