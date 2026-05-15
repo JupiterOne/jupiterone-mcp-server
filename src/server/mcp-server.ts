@@ -1858,10 +1858,6 @@ export class JupiterOneMcpServer {
           .boolean()
           .optional()
           .describe('Include recently deleted information in the results'),
-        deferredResponse: z
-          .enum(['DISABLED', 'FORCE'])
-          .optional()
-          .describe('Allows for a deferred response to be returned'),
         flags: z.record(z.any()).optional().describe('Flags for query execution'),
         scopeFilters: z
           .array(z.record(z.any()))
@@ -1869,7 +1865,7 @@ export class JupiterOneMcpServer {
           .describe('Array of filters that define the desired vertex'),
       },
       handler: async (
-        { query, variables, cursor, includeDeleted, deferredResponse, flags, scopeFilters },
+        { query, variables, cursor, includeDeleted, flags, scopeFilters },
         client,
         validator
       ) => {
@@ -1877,7 +1873,6 @@ export class JupiterOneMcpServer {
           // Build flags object
           const queryFlags = { ...flags };
           if (typeof includeDeleted === 'boolean') queryFlags.includeDeleted = includeDeleted;
-          if (deferredResponse) queryFlags.deferredResponse = deferredResponse;
 
           const result = await client.executeJ1qlQuery({
             query,

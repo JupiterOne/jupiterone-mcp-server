@@ -398,18 +398,39 @@ Before running any J1QL query, verify:
 
 **Remember**: The execute-j1ql-query tool now provides enhanced error messages with specific suggestions. Always test queries here first!
 
+#### Response Shape
+
+Every successful query returns an envelope with the following top-level fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | `'list'` \| `'table'` \| `'tree'` | Result shape — `list` returns vertices, `table` returns named columns (when the query uses `RETURN`), `tree` returns vertices+edges. |
+| `data` | array (or `{vertices, edges}` for tree) | The query results for this page. |
+| `cursor` | string \| absent | **Present means more pages exist.** Absent means pagination is complete. See Pagination below. |
+| `totalCount` | number \| absent | Total matching rows across all pages. May be an estimate — see `estimate`. Absent when the query had an explicit `LIMIT` that bounded the result. |
+| `estimate` | boolean | `true` means `totalCount` is an estimate and may change between pages; `false` means `totalCount` is exact. |
+| `status` | string | `COMPLETED` on success. |
+| `duration` | number | Server-side execution time in ms. |
+| `correlationId` | string | Echo for support/debugging. |
+| `messages` | array | Server-side warnings or notices (usually empty). |
+| `url` | string | Direct link to view results in the JupiterOne UI. |
+
+#### Pagination
+
+**The pagination rule is: continue calling the tool with the returned `cursor` until the response no longer contains a `cursor` field.** Do not infer completion from `data.length` — a page can return zero rows while pagination is still in progress (this is intentional behavior; the underlying engine walks variable-sized partitions). Only the absence of `cursor` indicates "done."
+
+To paginate:
+1. Call `execute-j1ql-query` with your query (no `cursor`).
+2. Process `data`. If the response includes a `cursor`, call again with the same `query` and pass that `cursor` as the `cursor` parameter.
+3. Repeat until the response has no `cursor`.
+
+`totalCount` with `estimate: true` may change between pages — do not use it to decide when to stop. Only `cursor` is authoritative.
+
 #### 📌 IMPORTANT: Query Results URL
 
-When this tool returns query results, it includes a `url` field that provides a direct link to view the results in the JupiterOne UI. **Always share this URL with users when presenting query results** - it allows them to:
+The `url` field in every response is a direct link to view the results in the JupiterOne UI. **Always share this URL with users when presenting query results** - it allows them to:
 - View the data in an interactive table format
 - Export results to CSV or other formats
 - Save the query for future use
 - Share results with team members
 - Further refine the query in the JupiterOne UI
-
-Example response:
-```json
-{
-  "data": [...query results...],
-  "url": "https://your-account.apps.us.jupiterone.io/home/results?search=..."
-}
