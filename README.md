@@ -180,7 +180,7 @@ Replace the placeholder values with your actual JupiterOne credentials:
 ### Query Execution
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `execute-j1ql-query` | Execute a J1QL query | `query`, `variables` (optional), `cursor` (optional), `includeDeleted` (optional), `deferredResponse` (optional), `flags` (optional), `scopeFilters` (optional) |
+| `execute-j1ql-query` | Execute a J1QL query | `query`, `variables` (optional), `cursor` (optional), `includeDeleted` (optional), `flags` (optional), `scopeFilters` (optional) |
 
 ## Deployment
 
